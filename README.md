@@ -46,4 +46,16 @@ omnistate:
 A registry that does not answer throws `UnavailableException` (with `$retryAfter` when it said): that is
 not an answer about the company or the number.
 
+### Company search
+
+`CompanySearchType` is a search field that suggests companies as one types and, on a pick, fills the
+sibling fields named in `fill` (`['vatNumber' => 'vatNumber']`: the French VAT number derived from the
+SIREN). It asks `CompanySearchController`, `GET /omnistate/company/search?q=`: route it by importing
+`Bridge/Symfony/Controller/` (type `attribute`), or through a subclass in a directory already imported.
+
+**Protect that route.** The controller checks nothing itself: left open, anyone can use your server
+as a relay to the registries and spend their rate limits (Recherche d'entreprises: about 7 calls a
+second). Put it behind your back office's access control, or give your subclass an `#[IsGranted]`
+(base-bundle-market's is `#[IsGranted('MARKET_VIEW')]`).
+
 License: LGPL-3.0-or-later.
