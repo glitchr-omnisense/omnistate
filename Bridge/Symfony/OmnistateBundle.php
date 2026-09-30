@@ -3,6 +3,8 @@
 namespace Omnistate\Bridge\Symfony;
 
 use Omnistate\AnnuaireEntreprises\AnnuaireEntreprises;
+use Omnistate\Bridge\Symfony\Controller\CompanySearchController;
+use Omnistate\Bridge\Symfony\Form\CompanySearchType;
 use Omnistate\Bridge\Symfony\Validator\VatNumberValidator;
 use Omnistate\Iana\Bootstrap;
 use Omnistate\Iana\Rdap;
@@ -14,6 +16,7 @@ use Omnistate\Vies\Vies;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\Form\AbstractType;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -23,7 +26,10 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  * Omnistate in a Symfony application: Omnistate\Omnistate autowired, every
  * registry package installed (omnistate/vies, omnistate/annuaire-entreprises,
  * omnistate/iana) registered, answers kept in a cache pool, and the
- * #[Siren], #[Siret] and #[VatNumber] constraints.
+ * #[Siren], #[Siret] and #[VatNumber] constraints, and the company search:
+ * CompanySearchType (a form field that fills its siblings from the company
+ * picked) asking CompanySearchController (GET /omnistate/company/search,
+ * routed by importing Bridge/Symfony/Controller/ as attributes).
  *
  *     omnistate:
  *         cache: cache.app          # null: every call asks the registry
@@ -37,6 +43,20 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
 final class OmnistateBundle extends AbstractBundle
 {
     protected string $extensionAlias = 'omnistate';
+
+    /** This directory: its templates/ are @Omnistate (the default is two levels up). */
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
+
+    /** The company search field's widget, in every form theme. */
+    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        if ($builder->hasExtension('twig')) {
+            $builder->prependExtensionConfig('twig', ['form_themes' => ['@Omnistate/form/company_search.html.twig']]);
+        }
+    }
 
     public function configure(DefinitionConfigurator $definition): void
     {
@@ -86,5 +106,16 @@ final class OmnistateBundle extends AbstractBundle
         $services->set(VatNumberValidator::class)
             ->args([service(Omnistate::class)])
             ->tag('validator.constraint_validator');
+
+        $services->set(CompanySearch::class)->args([service(Omnistate::class)])->public();
+        $services->set(CompanySearchController::class)
+            ->args([service(CompanySearch::class)])
+            ->tag('controller.service_arguments')
+            ->public();
+        if (class_exists(AbstractType::class)) {
+            $services->set(CompanySearchType::class)
+                ->args([service('router')->nullOnInvalid()])
+                ->tag('form.type');
+        }
     }
 }

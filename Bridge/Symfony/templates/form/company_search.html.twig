@@ -1,0 +1,72 @@
+{# The company search field (CompanySearchType): the input, its list of
+   suggestions, and the script that fills them - self-contained, bound once
+   on the document, so it works in any layout and after a page swap. #}
+{%- block omnistate_company_search_widget -%}
+    <div class="omnistate-company-search" style="position:relative">
+        {{- block('search_widget') -}}
+        <ul class="omnistate-company-search-results" role="listbox" hidden
+            style="position:absolute;z-index:1000;left:0;right:0;margin:.15rem 0 0;padding:.25rem 0;list-style:none;background:var(--bs-body-bg,#fff);border:1px solid rgba(0,0,0,.15);border-radius:.375rem;box-shadow:0 .5rem 1rem rgba(0,0,0,.15);max-height:20rem;overflow:auto"></ul>
+    </div>
+    <script>
+    (function () {
+        if (window.__omnistateCompanySearch) return;
+        window.__omnistateCompanySearch = true;
+        var timer = null, seq = 0;
+        function list(input) { return input.closest('.omnistate-company-search').querySelector('.omnistate-company-search-results'); }
+        function close(input) { var ul = list(input); ul.hidden = true; ul.innerHTML = ''; }
+        function pick(input, row) {
+            input.value = row.name || '';
+            var fill = {};
+            try { fill = JSON.parse(input.getAttribute('data-omnistate-fill') || '{}'); } catch (e) {}
+            Object.keys(fill).forEach(function (id) {
+                var target = document.getElementById(id);
+                if (!target || row[fill[id]] == null) return;
+                target.value = row[fill[id]];
+                target.dispatchEvent(new Event('input', {bubbles: true}));
+                target.dispatchEvent(new Event('change', {bubbles: true}));
+            });
+            close(input);
+        }
+        function show(input, rows) {
+            var ul = list(input);
+            ul.innerHTML = '';
+            rows.forEach(function (row) {
+                var li = document.createElement('li');
+                li.setAttribute('role', 'option');
+                li.style.cssText = 'padding:.35rem .75rem;cursor:pointer' + (row.active ? '' : ';opacity:.55');
+                var name = document.createElement('strong'); name.textContent = row.name;
+                var meta = document.createElement('small'); meta.style.display = 'block';
+                meta.textContent = [row.siren, row.address, row.active ? null : '(closed)'].filter(Boolean).join(' · ');
+                li.appendChild(name); li.appendChild(meta);
+                li.addEventListener('mousedown', function (event) { event.preventDefault(); pick(input, row); });
+                ul.appendChild(li);
+            });
+            ul.hidden = rows.length === 0;
+        }
+        document.addEventListener('input', function (event) {
+            var input = event.target.closest && event.target.closest('[data-omnistate-company-search]');
+            if (!input) return;
+            clearTimeout(timer);
+            var query = input.value.trim();
+            if (query.length < parseInt(input.getAttribute('data-omnistate-min-length') || '3', 10)) { close(input); return; }
+            timer = setTimeout(function () {
+                var mine = ++seq;
+                var url = input.getAttribute('data-omnistate-company-search');
+                url += (url.indexOf('?') < 0 ? '?' : '&') + 'q=' + encodeURIComponent(query) + '&limit=' + (input.getAttribute('data-omnistate-limit') || '10');
+                fetch(url, {headers: {'Accept': 'application/json'}, credentials: 'same-origin'})
+                    .then(function (response) { return response.ok ? response.json() : {results: []}; })
+                    .then(function (data) { if (mine === seq) show(input, data.results || []); })
+                    .catch(function () { if (mine === seq) close(input); });
+            }, 300);
+        });
+        document.addEventListener('focusout', function (event) {
+            var input = event.target.closest && event.target.closest('[data-omnistate-company-search]');
+            if (input) setTimeout(function () { close(input); }, 150);
+        });
+        document.addEventListener('keydown', function (event) {
+            var input = event.target.closest && event.target.closest('[data-omnistate-company-search]');
+            if (input && event.key === 'Escape') close(input);
+        });
+    })();
+    </script>
+{%- endblock -%}

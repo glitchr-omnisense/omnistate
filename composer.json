@@ -14,13 +14,18 @@
         "symfony/cache": "^6.4|^7.0|^8.0",
         "symfony/config": "^6.4|^7.0|^8.0",
         "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+        "symfony/form": "^6.4|^7.0|^8.0",
+        "symfony/http-foundation": "^6.4|^7.0|^8.0",
         "symfony/http-client": "^6.4|^7.0|^8.0",
         "symfony/http-kernel": "^6.4|^7.0|^8.0",
+        "symfony/routing": "^6.4|^7.0|^8.0",
         "symfony/validator": "^6.4|^7.0|^8.0"
     },
     "suggest": {
         "symfony/http-client": "The HTTP client the registries are asked through",
         "symfony/cache-contracts": "Answers kept a while: registries change slowly, and some count their calls",
+        "symfony/form": "The company search field (CompanySearchType)",
+        "symfony/routing": "The company search endpoint (CompanySearchController)",
         "omnistate/vies": "EU VAT numbers, checked with the European Commission's VIES",
         "omnistate/annuaire-entreprises": "French companies, from the State's Recherche d'entreprises API",
         "omnistate/iana": "Domains, IP addresses and AS numbers, through IANA's RDAP bootstrap"
