@@ -9,7 +9,11 @@ use Omnistate\Bridge\Symfony\Form\CompanySearchType;
 use Omnistate\Bridge\Symfony\Validator\VatNumberValidator;
 use Omnistate\Iana\Bootstrap;
 use Omnistate\Iana\Rdap;
+use Omnistate\MatchId\MatchId;
+use Omnistate\NationalArchivesUk\NationalArchivesUk;
 use Omnistate\Omnistate;
+use Omnistate\OpenArchieven\OpenArchieven;
+use Omnistate\Registry\CivilRegistryInterface;
 use Omnistate\Registry\CompanyRegistryInterface;
 use Omnistate\Registry\InternetRegistryInterface;
 use Omnistate\Registry\ProfessionalRegistryInterface;
@@ -41,6 +45,13 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  *         annuaire_sante:
  *             api_key: '%env(ESANTE_API_KEY)%'   # omnistate/annuaire-sante: health professionals (RPPS) and facilities (FINESS)
  *
+ *         matchid:
+ *             token: '%env(MATCHID_TOKEN)%'      # omnistate/matchid: optional, a higher quota
+ *
+ * Civil registers (omnistate/matchid, omnistate/openarchieven,
+ * omnistate/national-archives-uk) are registered when installed and tagged
+ * omnistate.civil_registry.
+ *
  * An application's own registries (a CompanyRegistryInterface...) are asked
  * too, autoconfigured.
  */
@@ -70,6 +81,13 @@ final class OmnistateBundle extends AbstractBundle
                 ->integerNode('ttl')->defaultValue(86400)->min(0)->info('How long an answer is kept, in seconds.')->end()
                 ->floatNode('timeout')->defaultValue(10)->info('Seconds a registry has to answer.')->end()
                 ->scalarNode('requester')->defaultNull()->info('Your own VAT number, sent with VAT checks: VIES answers a consultation number, the proof of the check.')->end()
+                ->arrayNode('matchid')
+                    ->info('omnistate/matchid: French deaths since 1970 (INSEE\'s file).')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('token')->defaultNull()->info('A matchID API token (Authorization: Bearer): optional, for a higher quota.')->end()
+                    ->end()
+                ->end()
                 ->arrayNode('annuaire_sante')
                     ->info('omnistate/annuaire-sante: the ANS\'s FHIR API (health professionals, facilities).')
                     ->addDefaultsIfNotSet()
@@ -81,12 +99,13 @@ final class OmnistateBundle extends AbstractBundle
             ->end();
     }
 
-    /** @param array{cache: ?string, ttl: int, timeout: float, requester: ?string, annuaire_sante: array{api_key: ?string, url: string}} $config */
+    /** @param array{cache: ?string, ttl: int, timeout: float, requester: ?string, matchid: array{token: ?string}, annuaire_sante: array{api_key: ?string, url: string}} $config */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->registerForAutoconfiguration(CompanyRegistryInterface::class)->addTag('omnistate.company_registry');
         $builder->registerForAutoconfiguration(VatRegistryInterface::class)->addTag('omnistate.vat_registry');
         $builder->registerForAutoconfiguration(ProfessionalRegistryInterface::class)->addTag('omnistate.professional_registry');
+        $builder->registerForAutoconfiguration(CivilRegistryInterface::class)->addTag('omnistate.civil_registry');
 
         $services = $container->services();
         $http = service('http_client');
@@ -101,6 +120,15 @@ final class OmnistateBundle extends AbstractBundle
             $services->set(AnnuaireSante::class)
                 ->args([$http, $config['annuaire_sante']['api_key'], $config['timeout'], $config['annuaire_sante']['url']])
                 ->tag('omnistate.professional_registry');
+        }
+        if (class_exists(MatchId::class)) {
+            $services->set(MatchId::class)->args([$http, $config['matchid']['token'], $config['timeout']])->tag('omnistate.civil_registry');
+        }
+        if (class_exists(OpenArchieven::class)) {
+            $services->set(OpenArchieven::class)->args([$http, $config['timeout']])->tag('omnistate.civil_registry');
+        }
+        if (class_exists(NationalArchivesUk::class)) {
+            $services->set(NationalArchivesUk::class)->args([$http, $config['timeout']])->tag('omnistate.civil_registry');
         }
         $internet = null;
         if (class_exists(Rdap::class)) {
@@ -119,6 +147,7 @@ final class OmnistateBundle extends AbstractBundle
                 $config['ttl'],
                 $config['requester'],
                 tagged_iterator('omnistate.professional_registry'),
+                tagged_iterator('omnistate.civil_registry'),
             ])
             ->public();
 

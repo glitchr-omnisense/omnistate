@@ -2,7 +2,7 @@
     "name": "glitchr/omnistate",
     "type": "library",
     "description": "Omnistate: one contract for what states and registries know - companies, VAT numbers, domains and networks (the Omnipay of public registers).",
-    "keywords": ["company", "registry", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc"],
+    "keywords": ["company", "registry", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc", "civil registry", "genealogy"],
     "license": "LGPL-3.0-or-later",
     "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
     "require": {
@@ -28,7 +28,10 @@
         "symfony/routing": "The company search endpoint (CompanySearchController)",
         "omnistate/vies": "EU VAT numbers, checked with the European Commission's VIES",
         "omnistate/annuaire-entreprises": "French companies, from the State's Recherche d'entreprises API",
-        "omnistate/iana": "Domains, IP addresses and AS numbers, through IANA's RDAP bootstrap"
+        "omnistate/iana": "Domains, IP addresses and AS numbers, through IANA's RDAP bootstrap",
+        "omnistate/matchid": "French deaths since 1970 (INSEE's file), through matchID",
+        "omnistate/openarchieven": "Births, marriages, deaths and more from the archives of the Netherlands and Belgium, with scans, through Open Archives",
+        "omnistate/national-archives-uk": "The UK National Archives' Discovery catalogue: documents about a person, not civil registration"
     },
     "autoload": {"psr-4": {"Omnistate\\": ""}, "exclude-from-classmap": ["/Tests/"]},
     "autoload-dev": {"psr-4": {"Omnistate\\Tests\\": "Tests/"}},

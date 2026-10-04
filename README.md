@@ -9,6 +9,7 @@ $omnistate->domain('glitchr.dev');         // registrar, dates, name servers
 $omnistate->network('193.0.6.139');        // or 'AS3333': who holds it
 $omnistate->professional('10003461033');   // a health professional by RPPS: profession, workplaces, MSSanté
 $omnistate->facility('580008803');         // a health facility by FINESS
+$omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year(1932)));  // acts and documents about a person
 ```
 
 This package holds the contract, the models (`Company`, `Establishment`, `Manager`, `FinancialYear`,
@@ -21,6 +22,9 @@ Symfony bundle. Each source is a package of its own:
 | `omnistate/vies` | EU VAT numbers: the European Commission's VIES (REST) | free, no key |
 | `omnistate/iana` | Domains, IP ranges, AS numbers: IANA's RDAP bootstrap | free, no key |
 | `omnistate/annuaire-sante` | French health professionals (RPPS) and facilities (FINESS): the ANS's FHIR API | free, Gravitee key |
+| `omnistate/matchid` | French deaths since 1970: INSEE's file, through matchID | free, no key |
+| `omnistate/openarchieven` | Births, marriages, deaths and more from Dutch and Belgian archives, with scans: Open Archives | free, no key |
+| `omnistate/national-archives-uk` | Documents about a person in the UK National Archives' catalogue (not civil registration) | free, no key |
 
 ## Identifiers
 
@@ -35,6 +39,9 @@ Finess::isValid('580008803');              // Luhn; 2A / 2B for Corsica
 ```
 
 Regulated professionals and facilities: [docs/professionals.md](docs/professionals.md).
+
+Civil registers - acts and documents about people, which countries and kinds each one covers:
+[docs/civil.md](docs/civil.md).
 
 ## Symfony
 
