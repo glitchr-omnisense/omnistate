@@ -7,6 +7,8 @@ $omnistate->company('901 821 074');        // or a SIRET, or FR53901821074
 $omnistate->vat('DE123456789');            // valid? whose? (+ a consultation number)
 $omnistate->domain('glitchr.dev');         // registrar, dates, name servers
 $omnistate->network('193.0.6.139');        // or 'AS3333': who holds it
+$omnistate->professional('10003461033');   // a health professional by RPPS: profession, workplaces, MSSanté
+$omnistate->facility('580008803');         // a health facility by FINESS
 ```
 
 This package holds the contract, the models (`Company`, `Establishment`, `Manager`, `FinancialYear`,
@@ -18,6 +20,7 @@ Symfony bundle. Each source is a package of its own:
 | `omnistate/annuaire-entreprises` | French companies: the State's Recherche d'entreprises API (INSEE Sirene + INPI's RNE) | free, no key |
 | `omnistate/vies` | EU VAT numbers: the European Commission's VIES (REST) | free, no key |
 | `omnistate/iana` | Domains, IP ranges, AS numbers: IANA's RDAP bootstrap | free, no key |
+| `omnistate/annuaire-sante` | French health professionals (RPPS) and facilities (FINESS): the ANS's FHIR API | free, Gravitee key |
 
 ## Identifiers
 
@@ -27,7 +30,11 @@ Siret::isValid('90182107400019');          // Luhn, La Poste's rule too
 Siren::toVatNumber('901821074');           // FR53901821074
 VatNumber::normalize('gr 123456789');      // EL123456789 - each member state's shape
 VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the SIREN
+Rpps::isValid('10000000017');              // Luhn; Rpps::normalize() takes the IDNPS (8 + RPPS) too
+Finess::isValid('580008803');              // Luhn; 2A / 2B for Corsica
 ```
+
+Regulated professionals and facilities: [docs/professionals.md](docs/professionals.md).
 
 ## Symfony
 

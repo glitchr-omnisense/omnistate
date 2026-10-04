@@ -3,15 +3,21 @@
 namespace Omnistate;
 
 use Omnistate\Exception\NotSupportedException;
+use Omnistate\Identifier\Finess;
+use Omnistate\Identifier\Rpps;
 use Omnistate\Identifier\Siren;
 use Omnistate\Identifier\Siret;
 use Omnistate\Identifier\VatNumber;
 use Omnistate\Model\Company;
 use Omnistate\Model\Domain;
+use Omnistate\Model\Facility;
 use Omnistate\Model\Network;
+use Omnistate\Model\Professional;
 use Omnistate\Model\VatCheck;
 use Omnistate\Registry\CompanyRegistryInterface;
+use Omnistate\Registry\FacilityRegistryInterface;
 use Omnistate\Registry\InternetRegistryInterface;
+use Omnistate\Registry\ProfessionalRegistryInterface;
 use Omnistate\Registry\VatRegistryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -25,6 +31,8 @@ use Symfony\Contracts\Cache\ItemInterface;
  *     $omnistate->company('901821074')?->name;            // "GLITCH ART"
  *     $omnistate->vat('FR53901821074')->valid;             // true
  *     $omnistate->domain('glitchr.dev')?->registrar;      // Gandi SAS
+ *     $omnistate->professional('10003461033')?->profession; // Médecin (an RPPS number)
+ *     $omnistate->facility('670001234')?->name;            // a FINESS number
  */
 final class Omnistate
 {
@@ -32,10 +40,13 @@ final class Omnistate
     private array $companies;
     /** @var list<VatRegistryInterface> */
     private array $vat;
+    /** @var list<ProfessionalRegistryInterface> */
+    private array $professionals;
 
     /**
      * @param iterable<CompanyRegistryInterface> $companies
      * @param iterable<VatRegistryInterface>     $vat
+     * @param iterable<ProfessionalRegistryInterface> $professionals registers of regulated professionals (and their facilities)
      */
     public function __construct(
         iterable $companies = [],
@@ -45,9 +56,11 @@ final class Omnistate
         private readonly int $ttl = 86400,
         /** Your own VAT number, sent with every check unless another is given: VIES then answers a consultation number. */
         private readonly ?string $requester = null,
+        iterable $professionals = [],
     ) {
         $this->companies = [...$companies];
         $this->vat = [...$vat];
+        $this->professionals = [...$professionals];
     }
 
     /**
@@ -102,6 +115,55 @@ final class Omnistate
         }
 
         throw new NotSupportedException(sprintf('No VAT registry installed answers for %s.', VatNumber::country($normalized)));
+    }
+
+    /**
+     * A regulated professional by their identifier: an RPPS number (or its
+     * IDNPS form, "8" + RPPS)...
+     *
+     * @throws NotSupportedException no professional registry installed knows that kind of identifier
+     */
+    public function professional(string $identifier): ?Professional
+    {
+        $identifier = (string) preg_replace('/[\s.\-]/', '', $identifier);
+        $identifier = Rpps::normalize($identifier) ?? $identifier;
+        foreach ($this->professionals as $registry) {
+            if ($registry->supports($identifier)) {
+                return $this->remember('professional.'.$registry->name().'.'.$identifier, fn () => $registry->professional($identifier));
+            }
+        }
+
+        throw new NotSupportedException(sprintf('No professional registry installed knows "%s".', $identifier));
+    }
+
+    /** @return list<Professional> from every professional registry installed, the first that finds any */
+    public function professionals(string $name, ?string $postcode = null, int $limit = 10): array
+    {
+        foreach ($this->professionals as $registry) {
+            if ($found = $this->remember('professionals.'.$registry->name().'.'.$limit.'.'.$postcode.'.'.mb_strtolower(trim($name)), fn () => $registry->search($name, $postcode, $limit))) {
+                return $found;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * A health or social facility by its identifier (a FINESS number), asked
+     * of the professional registries that know facilities too.
+     *
+     * @throws NotSupportedException
+     */
+    public function facility(string $identifier): ?Facility
+    {
+        $identifier = Finess::normalize($identifier) ?? strtoupper((string) preg_replace('/[\s.\-]/', '', $identifier));
+        foreach ($this->professionals as $registry) {
+            if ($registry instanceof FacilityRegistryInterface && $registry->supportsFacility($identifier)) {
+                return $this->remember('facility.'.$registry->name().'.'.$identifier, fn () => $registry->facility($identifier));
+            }
+        }
+
+        throw new NotSupportedException(sprintf('No facility registry installed knows "%s".', $identifier));
     }
 
     public function domain(string $name): ?Domain
