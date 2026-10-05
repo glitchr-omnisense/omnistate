@@ -13,8 +13,9 @@ $omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year
 ```
 
 This package holds the contract, the models (`Company`, `Establishment`, `Manager`, `FinancialYear`,
-`VatCheck`, `Domain`, `Network`...), the identifier rules - checked without asking anyone - and the
-Symfony bundle. Each source is a package of its own:
+`VatCheck`, `Domain`, `Network`...), the identifier rules - checked without asking anyone - and a
+bridge for Symfony. It needs no framework: it requires nothing but `symfony/http-client-contracts`,
+each source package `symfony/http-client`. Each source is a package of its own:
 
 | Package | Source | Access |
 |---|---|---|
@@ -25,6 +26,38 @@ Symfony bundle. Each source is a package of its own:
 | `omnistate/matchid` | French deaths since 1970: INSEE's file, through matchID | free, no key |
 | `omnistate/openarchieven` | Births, marriages, deaths and more from Dutch and Belgian archives, with scans: Open Archives | free, no key |
 | `omnistate/national-archives-uk` | Documents about a person in the UK National Archives' catalogue (not civil registration) | free, no key |
+
+## Plain PHP
+
+```sh
+composer require glitchr/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
+```
+
+```php
+require __DIR__.'/vendor/autoload.php';
+
+use Omnistate\AnnuaireEntreprises\AnnuaireEntreprises;
+use Omnistate\Iana\{Bootstrap, Rdap};
+use Omnistate\Omnistate;
+use Omnistate\Vies\Vies;
+use Symfony\Component\HttpClient\HttpClient;
+
+$http = HttpClient::create();
+$omnistate = new Omnistate(
+    companies: [new AnnuaireEntreprises($http)],
+    vat: [new Vies($http)],
+    internet: new Rdap($http, new Bootstrap($http)),
+);
+
+echo $omnistate->company('901 821 074')->name, "\n";            // GLITCH ART
+echo $omnistate->domain('glitchr.dev')->registrar->name, "\n";   // Gandi SAS
+```
+
+No key: these registries are open. Each registry is given the HTTP client to call with - the
+application's, a `MockHttpClient` in a test. The whole script and its answer, and the rest:
+[docs/installation.md](docs/installation.md). No class of a framework is loaded on the way:
+`Tests/BareTest.php` checks it in a process of its own, and so does
+`docker compose run --rm omnistate bare` ([docs/harness.md](docs/harness.md)).
 
 ## Identifiers
 
@@ -45,6 +78,10 @@ Civil registers - acts and documents about people, which countries and kinds eac
 
 ## Symfony
 
+In a Symfony application a bundle does the wiring; its components (`symfony/config`,
+`symfony/dependency-injection`, `symfony/http-kernel`, `symfony/validator`, `symfony/form`,
+`symfony/routing`, `symfony/http-foundation`) are not required by this package: the application
+has them ([docs/symfony.md](docs/symfony.md)).
 `Omnistate\Bridge\Symfony\OmnistateBundle`: `Omnistate\Omnistate` autowired, every `omnistate/*` package
 installed registered, answers kept in a cache pool, and the `#[Siren]`, `#[Siret]` and
 `#[VatNumber(checkExistence: true)]` constraints.
@@ -71,5 +108,13 @@ SIREN). It asks `CompanySearchController`, `GET /omnistate/company/search?q=`: r
 as a relay to the registries and spend their rate limits (Recherche d'entreprises: about 7 calls a
 second). Put it behind your back office's access control, or give your subclass an `#[IsGranted]`
 (base-bundle-market's is `#[IsGranted('MARKET_VIEW')]`).
+
+## Documentation
+
+- [Installation and first calls](docs/installation.md): plain PHP first
+- [Symfony](docs/symfony.md)
+- [Regulated professionals and facilities](docs/professionals.md)
+- [Civil registers](docs/civil.md)
+- [The Docker harness](docs/harness.md)
 
 License: LGPL-3.0-or-later.
