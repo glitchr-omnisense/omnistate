@@ -22,18 +22,23 @@
         "symfony/validator": "^6.4|^7.0|^8.0"
     },
     "suggest": {
-        "symfony/http-client": "The HTTP client the registries are asked through",
         "symfony/cache-contracts": "Answers kept a while: registries change slowly, and some count their calls",
-        "symfony/form": "The company search field (CompanySearchType)",
-        "symfony/routing": "The company search endpoint (CompanySearchController)",
+        "symfony/config": "In a Symfony application: the configuration of Omnistate\\Bridge\\Symfony\\OmnistateBundle",
+        "symfony/dependency-injection": "In a Symfony application: the services of Omnistate\\Bridge\\Symfony\\OmnistateBundle",
+        "symfony/form": "In a Symfony application: the company search field (CompanySearchType)",
+        "symfony/http-foundation": "In a Symfony application: the company search endpoint's request and response",
+        "symfony/http-kernel": "In a Symfony application: Omnistate\\Bridge\\Symfony\\OmnistateBundle itself",
+        "symfony/routing": "In a Symfony application: the company search endpoint (CompanySearchController)",
+        "symfony/validator": "In a Symfony application: the #[Siren], #[Siret] and #[VatNumber] constraints",
         "omnistate/vies": "EU VAT numbers, checked with the European Commission's VIES",
         "omnistate/annuaire-entreprises": "French companies, from the State's Recherche d'entreprises API",
         "omnistate/iana": "Domains, IP addresses and AS numbers, through IANA's RDAP bootstrap",
+        "omnistate/annuaire-sante": "French health professionals (RPPS) and facilities (FINESS), through the ANS's FHIR API",
         "omnistate/matchid": "French deaths since 1970 (INSEE's file), through matchID",
         "omnistate/openarchieven": "Births, marriages, deaths and more from the archives of the Netherlands and Belgium, with scans, through Open Archives",
         "omnistate/national-archives-uk": "The UK National Archives' Discovery catalogue: documents about a person, not civil registration"
     },
-    "autoload": {"psr-4": {"Omnistate\\": ""}, "exclude-from-classmap": ["/Tests/"]},
+    "autoload": {"psr-4": {"Omnistate\\": ""}, "exclude-from-classmap": ["/Tests/", "/docker/"]},
     "autoload-dev": {"psr-4": {"Omnistate\\Tests\\": "Tests/"}},
     "config": {"sort-packages": true}
 }
