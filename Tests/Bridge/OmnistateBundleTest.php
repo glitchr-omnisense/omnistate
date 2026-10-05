@@ -29,7 +29,7 @@ final class OmnistateBundleTest extends TestCase
         $container->set('http_client', new MockHttpClient(function (string $method, string $url, array $options) use (&$sent) {
             $sent[] = json_decode($options['body'] ?? 'null', true);
 
-            return new MockResponse(file_get_contents(__DIR__.'/../../../vies/Tests/Fixtures/valid.json'));
+            return new MockResponse(file_get_contents(__DIR__.'/../../docker/harness/recorded/vies-FR53901821074.json'));
         }));
 
         $omnistate = $container->get(Omnistate::class);

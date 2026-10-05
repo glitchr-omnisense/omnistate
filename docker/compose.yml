@@ -1,0 +1,26 @@
+# glitchr/omnistate with every source package, against the real registries:
+#
+#   cp .env.dist .env                                    # nothing is needed: the registries asked are open
+#   docker compose run --rm omnistate bare               # plain PHP: no bundle, no container; a company, a VAT number, a domain; what PHP loaded
+#   docker compose run --rm omnistate bare --recorded    # the answers kept in harness/recorded/ instead of the calls
+#   docker compose run --rm omnistate test               # every package's tests
+#
+# Sources come from GitHub (branch 1.x) unless their checkout sits under
+# OMNISTATE_PLUGINS (set it to ../.. in .env when this core sits in the
+# workspace beside them): then that checkout is what runs.
+name: omnistate-harness
+
+services:
+  omnistate:
+    build: .
+    image: glitchr/omnistate-harness
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ..:/omnistate/core
+      - ${OMNISTATE_PLUGINS:-./plugins}:/omnistate/plugins:ro
+      - harness:/harness
+
+volumes:
+  harness:

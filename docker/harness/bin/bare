@@ -1,0 +1,141 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Omnistate in bare PHP: no bundle, no container, no console component.
+ * Omnistate\Omnistate is built by hand from the source packages installed,
+ * says which registries it has, then is asked for a company by its SIREN
+ * (Recherche d'entreprises), a VAT number (VIES) and a domain (IANA's RDAP
+ * bootstrap, then the registry's server) - open services, no key - and the
+ * script lists what PHP loaded on the way.
+ *
+ *   docker compose run --rm omnistate bare              # exits 1 when a class of a framework was loaded
+ *   docker compose run --rm omnistate bare --recorded   # the answers recorded on 2026-09-29 instead of the calls
+ *   docker compose run --rm omnistate bare --json       # the same, whole: every class loaded, every file since the autoloader
+ *
+ * Four calls, one to each service: far under what they allow (Recherche
+ * d'entreprises: about 7 a second). The registries that take a key or are
+ * asked about people (annuaire-sante, the civil registers) are built and
+ * named, not called. OMNISTATE_AUTOLOAD names another autoloader than the
+ * harness's.
+ */
+
+use Omnistate\Exception\UnavailableException;
+use Omnistate\Omnistate;
+use Omnistate\Registry\CivilRegistryInterface;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
+
+require getenv('OMNISTATE_AUTOLOAD') ?: '/harness/vendor/autoload.php';
+// What Composer requires for every package installed (their autoload.files) is loaded before this line,
+// whatever the script does: not counted below.
+$autoloaded = get_included_files();
+
+const SIREN = '901821074';
+const VAT = 'FR53901821074';
+const DOMAIN = 'glitchr.dev';
+
+$recorded = \in_array('--recorded', $argv, true);
+$http = !$recorded ? HttpClient::create(['timeout' => 20]) : new MockHttpClient(static function (string $method, string $url): MockResponse {
+    $file = match (true) {
+        str_starts_with($url, 'https://recherche-entreprises.api.gouv.fr/search') => 'annuaire-entreprises-901821074.json',
+        str_starts_with($url, 'https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number') => 'vies-FR53901821074.json',
+        'https://data.iana.org/rdap/dns.json' === $url => 'iana-dns.json',
+        'https://pubapi.registry.google/rdap/domain/glitchr.dev' === $url => 'rdap-glitchr.dev.json',
+        default => null,
+    };
+
+    return null === $file ? new MockResponse('{}', ['http_code' => 404]) : new MockResponse((string) file_get_contents(__DIR__.'/../recorded/'.$file));
+});
+
+// Each registry is given the HTTP client to call with; what it is a registry of says where Omnistate takes it.
+$registries = ['companies' => [], 'vat' => [], 'internet' => [], 'professionals' => [], 'civil' => []];
+foreach (require __DIR__.'/../plugins.php' as $slug => [, $class, $kind]) {
+    if (class_exists($class)) {
+        $registries[$kind][$slug] = 'iana' === $slug ? new $class($http, new \Omnistate\Iana\Bootstrap($http)) : new $class($http);
+    }
+}
+$omnistate = new Omnistate(
+    array_values($registries['companies']),
+    array_values($registries['vat']),
+    array_values($registries['internet'])[0] ?? null,
+    requester: getenv('OMNISTATE_REQUESTER') ?: null,
+    professionals: array_values($registries['professionals']),
+    civil: array_values($registries['civil']),
+);
+
+$day = static fn (?DateTimeImmutable $date) => $date?->format('Y-m-d');
+$report = ['recorded' => $recorded, 'registries' => array_map('array_keys', $registries), 'civil' => [], 'company' => null, 'vat' => null, 'domain' => null, 'unavailable' => []];
+foreach ($omnistate->civilRegistries() as $registry) {
+    \assert($registry instanceof CivilRegistryInterface);
+    $report['civil'][$registry->name()] = $registry->countries();
+}
+// A registry that does not answer is not an answer about the company or the number: said, and the others still asked.
+$ask = static function (string $what, Closure $question) use (&$report): mixed {
+    try {
+        return $question();
+    } catch (UnavailableException $e) {
+        $report['unavailable'][$what] = $e->getMessage();
+
+        return null;
+    }
+};
+if ($registries['companies']) {
+    $company = $ask('company', static fn () => $omnistate->company(SIREN));
+    $report['company'] = null === $company ? null : [
+        'identifier' => $company->identifier,
+        'name' => $company->name,
+        'legal_form' => null === $company->legalForm ? null : (string) $company->legalForm,
+        'status' => $company->status->value,
+        'created' => $day($company->createdOn),
+        'head_office' => $company->headOffice?->identifier,
+        'city' => $company->headOffice?->address?->city,
+        'vat' => $company->vatNumber,
+        'source' => $company->source,
+    ];
+}
+if ($registries['vat']) {
+    $check = $ask('vat', static fn () => $omnistate->vat(VAT));
+    $report['vat'] = null === $check ? null : ['number' => $check->number, 'valid' => $check->valid, 'name' => $check->name, 'address' => $check->address, 'consultation' => $check->consultationNumber, 'source' => $check->source];
+}
+if ($registries['internet']) {
+    $domain = $ask('domain', static fn () => $omnistate->domain(DOMAIN));
+    $report['domain'] = null === $domain ? null : ['name' => $domain->name, 'registrar' => $domain->registrar?->name, 'registered' => $day($domain->registeredAt), 'expires' => $day($domain->expiresAt), 'nameservers' => $domain->nameservers, 'server' => $domain->server];
+}
+
+// What PHP loaded to get there: the proof that no framework was needed.
+$report['symbols'] = [...get_declared_classes(), ...get_declared_interfaces(), ...get_declared_traits()];
+$report['files'] = array_values(array_diff(get_included_files(), $autoloaded));
+$framework = array_values(preg_grep('~^(?:Symfony\\\\Component\\\\(?:DependencyInjection|Config|HttpKernel|HttpFoundation|Form|Routing|Validator)|Symfony\\\\Bundle|Symfony\\\\Bridge|Doctrine|Twig)\\\\~', $report['symbols']));
+$symfony = array_values(array_unique(array_map(static fn (string $s) => implode('\\', \array_slice(explode('\\', $s), 0, 3)), preg_grep('~^Symfony\\\\(?!Polyfill)~', $report['symbols']))));
+sort($symfony);
+
+if (\in_array('--json', $argv, true)) {
+    echo json_encode($report, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE), "\n";
+    exit($framework ? 1 : 0);
+}
+
+echo "Omnistate in bare PHP: Omnistate\\Omnistate built by hand, no bundle, no container.\n\n";
+foreach ($report['registries'] as $kind => $names) {
+    printf("  %-14s %s\n", $kind, implode(', ', $names) ?: 'none installed');
+}
+foreach ($report['civil'] as $name => $countries) {
+    printf("  %-14s %s covers %s\n", '', $name, implode(' ', $countries));
+}
+$from = $recorded ? 'from the answer recorded on 2026-09-29' : 'asked of';
+if ($company = $report['company']) {
+    printf("\nThe company %s, %s:\n  %s, %s, %s, created on %s\n  head office %s in %s, VAT %s\n", SIREN, $recorded ? $from : $from.' recherche-entreprises.api.gouv.fr', $company['name'], $company['legal_form'], $company['status'], $company['created'], $company['head_office'], $company['city'], $company['vat']);
+}
+if ($vat = $report['vat']) {
+    printf("\nThe VAT number %s, %s:\n  %s%s%s\n", VAT, $recorded ? $from : $from.' VIES', $vat['valid'] ? 'valid' : 'not valid', $vat['name'] ? ', '.$vat['name'].', '.$vat['address'] : '', $vat['consultation'] ? ', consultation '.$vat['consultation'] : '');
+}
+if ($domain = $report['domain']) {
+    printf("\nThe domain %s, %s:\n  registrar %s, registered on %s, expires on %s\n  name servers %s\n", DOMAIN, $recorded ? $from : $from.' '.$domain['server'].' (found through IANA\'s bootstrap)', $domain['registrar'], $domain['registered'], $domain['expires'], implode(', ', $domain['nameservers']));
+}
+foreach ($report['unavailable'] as $what => $message) {
+    printf("\nThe %s: the registry did not answer (%s) - that says nothing about it, ask again later.\n", ['company' => 'company '.SIREN, 'vat' => 'VAT number '.VAT, 'domain' => 'domain '.DOMAIN][$what], $message);
+}
+echo "\nLoaded from Symfony: ", implode(', ', $symfony) ?: 'nothing', "\n";
+echo 'Classes of a framework (DependencyInjection, Config, HttpKernel, HttpFoundation, Form, Routing, Validator, a bundle, a bridge, Doctrine, Twig): ', $framework ? implode(', ', $framework) : 'none', "\n";
+exit($framework ? 1 : 0);
