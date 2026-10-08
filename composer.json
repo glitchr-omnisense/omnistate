@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Omnistate: one contract for what states and registries know - companies, VAT numbers, domains and networks (the Omnipay of public registers).",
     "keywords": ["company", "registry", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc", "civil registry", "genealogy"],
-    "license": "LGPL-3.0-or-later",
+    "license": "MIT",
     "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
     "require": {
         "php": ">=8.2",
