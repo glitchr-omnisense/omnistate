@@ -32,6 +32,7 @@ $omnistate->civilRecord($record->source, $record->identifier);   // the whole re
 | `omnistate/matchid` | FR | deaths, since 1970 (INSEE's file) | no | free, no key (a token raises the quota) |
 | `omnistate/openarchieven` | NL, BE, FR, SR | births, baptisms, marriages, deaths, burials, others (population registers, notarial deeds...) | yes, when the archive scanned it | free, no key, 4 calls a second |
 | `omnistate/national-archives-uk` | GB | others only: a catalogue of archives (wills, service records, parish papers), **not** civil registration | no | free, no key |
+| `omnistate/nara` | US | others only: the National Archives Catalog (pension files, military service records, draft cards, naturalization indexes), **not** civil registration | yes, links to the scans at NARA | free, API key, 10,000 calls a month |
 
 Each register says what it covers, so a search screen can tell before asking:
 

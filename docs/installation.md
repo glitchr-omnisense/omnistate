@@ -2,7 +2,7 @@
 
 ```sh
 composer require glitchr/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
-composer require omnistate/matchid omnistate/openarchieven omnistate/national-archives-uk   # civil registers
+composer require omnistate/matchid omnistate/openarchieven omnistate/national-archives-uk omnistate/nara   # civil registers (nara: with a key)
 composer require omnistate/annuaire-sante                                                   # with a key from the ANS
 ```
 
@@ -72,7 +72,7 @@ second are allowed), IANA's RDAP bootstrap and the registry it names, and the Eu
 Commission's VIES - four calls. That is all there is to it:
 
 - a **registry** per source package (`AnnuaireEntreprises`, `Vies`, `Rdap` with its `Bootstrap`,
-  `AnnuaireSante`, `MatchId`, `OpenArchieven`, `NationalArchivesUk`), each given the HTTP client
+  `AnnuaireSante`, `MatchId`, `OpenArchieven`, `NationalArchivesUk`, `Nara`), each given the HTTP client
   to call with - the application's, a `MockHttpClient` in a test;
 - **`Omnistate\Omnistate`**, built by hand from the registries: `companies`, `vat`, `internet`,
   `professionals`, `civil`, and optionally a cache (`Symfony\Contracts\Cache\CacheInterface`), how

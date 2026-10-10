@@ -10,6 +10,7 @@ use Omnistate\Bridge\Symfony\Validator\VatNumberValidator;
 use Omnistate\Iana\Bootstrap;
 use Omnistate\Iana\Rdap;
 use Omnistate\MatchId\MatchId;
+use Omnistate\Nara\Nara;
 use Omnistate\NationalArchivesUk\NationalArchivesUk;
 use Omnistate\Omnistate;
 use Omnistate\OpenArchieven\OpenArchieven;
@@ -48,9 +49,12 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  *         matchid:
  *             token: '%env(MATCHID_TOKEN)%'      # omnistate/matchid: optional, a higher quota
  *
+ *         nara:
+ *             api_key: '%env(NARA_API_KEY)%'     # omnistate/nara: the US National Archives Catalog, 10,000 calls a month
+ *
  * Civil registers (omnistate/matchid, omnistate/openarchieven,
- * omnistate/national-archives-uk) are registered when installed and tagged
- * omnistate.civil_registry.
+ * omnistate/national-archives-uk, omnistate/nara) are registered when
+ * installed and tagged omnistate.civil_registry.
  *
  * An application's own registries (a CompanyRegistryInterface...) are asked
  * too, autoconfigured.
@@ -88,6 +92,13 @@ final class OmnistateBundle extends AbstractBundle
                         ->scalarNode('token')->defaultNull()->info('A matchID API token (Authorization: Bearer): optional, for a higher quota.')->end()
                     ->end()
                 ->end()
+                ->arrayNode('nara')
+                    ->info('omnistate/nara: the National Archives Catalog of the United States (Catalog API v2).')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('api_key')->defaultNull()->info('The Catalog API key (header x-api-key; ask Catalog_API@nara.gov), 10,000 calls a month; empty: the Catalog answers no data, every call UnavailableException.')->end()
+                    ->end()
+                ->end()
                 ->arrayNode('annuaire_sante')
                     ->info('omnistate/annuaire-sante: the ANS\'s FHIR API (health professionals, facilities).')
                     ->addDefaultsIfNotSet()
@@ -99,7 +110,7 @@ final class OmnistateBundle extends AbstractBundle
             ->end();
     }
 
-    /** @param array{cache: ?string, ttl: int, timeout: float, requester: ?string, matchid: array{token: ?string}, annuaire_sante: array{api_key: ?string, url: string}} $config */
+    /** @param array{cache: ?string, ttl: int, timeout: float, requester: ?string, matchid: array{token: ?string}, nara: array{api_key: ?string}, annuaire_sante: array{api_key: ?string, url: string}} $config */
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->registerForAutoconfiguration(CompanyRegistryInterface::class)->addTag('omnistate.company_registry');
@@ -129,6 +140,9 @@ final class OmnistateBundle extends AbstractBundle
         }
         if (class_exists(NationalArchivesUk::class)) {
             $services->set(NationalArchivesUk::class)->args([$http, $config['timeout']])->tag('omnistate.civil_registry');
+        }
+        if (class_exists(Nara::class)) {
+            $services->set(Nara::class)->args([$http, $config['nara']['api_key'], $config['timeout']])->tag('omnistate.civil_registry');
         }
         $internet = null;
         if (class_exists(Rdap::class)) {

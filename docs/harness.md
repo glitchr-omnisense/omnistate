@@ -36,10 +36,11 @@ Omnistate in bare PHP: Omnistate\Omnistate built by hand, no bundle, no containe
   vat            vies
   internet       iana
   professionals  annuaire-sante
-  civil          matchid, openarchieven, national-archives-uk
+  civil          matchid, openarchieven, national-archives-uk, nara
                  matchid covers FR
                  openarchieven covers NL BE FR SR
                  national-archives-uk covers GB
+                 nara covers US
 
 The company 901821074, asked of recherche-entreprises.api.gouv.fr:
   GLITCH ART, SARL, active, created on 2021-07-03

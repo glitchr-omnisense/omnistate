@@ -26,6 +26,7 @@ each source package `symfony/http-client`. Each source is a package of its own:
 | `omnistate/matchid` | French deaths since 1970: INSEE's file, through matchID | free, no key |
 | `omnistate/openarchieven` | Births, marriages, deaths and more from Dutch and Belgian archives, with scans: Open Archives | free, no key |
 | `omnistate/national-archives-uk` | Documents about a person in the UK National Archives' catalogue (not civil registration) | free, no key |
+| `omnistate/nara` | Federal files about a person in the US National Archives Catalog - pension files, military service, draft cards, naturalization indexes - with links to their scanned pages (not civil registration) | free, API key (10,000 calls a month) |
 
 ## Plain PHP
 

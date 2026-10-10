@@ -13,4 +13,5 @@ return [
     'matchid' => ['Omnistate\\MatchId\\Tests\\', 'Omnistate\\MatchId\\MatchId', 'civil'],
     'openarchieven' => ['Omnistate\\OpenArchieven\\Tests\\', 'Omnistate\\OpenArchieven\\OpenArchieven', 'civil'],
     'national-archives-uk' => ['Omnistate\\NationalArchivesUk\\Tests\\', 'Omnistate\\NationalArchivesUk\\NationalArchivesUk', 'civil'],
+    'nara' => ['Omnistate\\Nara\\Tests\\', 'Omnistate\\Nara\\Nara', 'civil'],
 ];

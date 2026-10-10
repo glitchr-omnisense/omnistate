@@ -16,6 +16,7 @@ use Omnistate\Model\PartialDate;
 use Omnistate\Model\Period;
 use Omnistate\Model\Place;
 use Omnistate\Model\Sex;
+use Omnistate\Nara\Nara;
 use Omnistate\NationalArchivesUk\NationalArchivesUk;
 use Omnistate\Omnistate;
 use Omnistate\OpenArchieven\OpenArchieven;
@@ -185,7 +186,7 @@ final class CivilTest extends TestCase
 
     public function testTheBundleRegistersTheCivilRegistersInstalled(): void
     {
-        if (!class_exists(MatchId::class) || !class_exists(OpenArchieven::class) || !class_exists(NationalArchivesUk::class)) {
+        if (!class_exists(MatchId::class) || !class_exists(OpenArchieven::class) || !class_exists(NationalArchivesUk::class) || !class_exists(Nara::class)) {
             self::markTestSkipped('The civil registry packages are not installed.');
         }
         $container = new ContainerBuilder();
@@ -193,7 +194,7 @@ final class CivilTest extends TestCase
         $container->register('cache.app', ArrayAdapter::class);
         $bundle = new OmnistateBundle();
         $container->registerExtension($bundle->getContainerExtension());
-        $container->loadFromExtension('omnistate', ['matchid' => ['token' => 't']]);
+        $container->loadFromExtension('omnistate', ['matchid' => ['token' => 't'], 'nara' => ['api_key' => 'k']]);
         $container->compile();
         $headers = [];
         $container->set('http_client', new MockHttpClient(function (string $method, string $url, array $options) use (&$headers) {
@@ -203,11 +204,14 @@ final class CivilTest extends TestCase
         }));
         $omnistate = $container->get(Omnistate::class);
 
-        self::assertSame(['matchid', 'openarchieven', 'national-archives-uk'], array_map(static fn ($r) => $r->name(), $omnistate->civilRegistries()));
-        self::assertSame(['BE', 'FR', 'GB', 'NL', 'SR'], $omnistate->civilCountries());
+        self::assertSame(['matchid', 'openarchieven', 'national-archives-uk', 'nara'], array_map(static fn ($r) => $r->name(), $omnistate->civilRegistries()));
+        self::assertSame(['BE', 'FR', 'GB', 'NL', 'SR', 'US'], $omnistate->civilCountries());
         self::assertSame(['matchid', 'openarchieven'], array_map(static fn ($r) => $r->name(), $omnistate->civilRegistries('FR')));
         self::assertSame([], $omnistate->civilRecords(new CivilQuery(familyName: 'Nobody', kinds: [CivilRecordKind::DEATH]), 'matchid'));
         self::assertContains('Authorization: Bearer t', $headers);
+
+        $omnistate->civilRecords(new CivilQuery(familyName: 'Nobody'), 'nara');
+        self::assertContains('x-api-key: k', $headers, 'the key configured, in its header');
     }
 
     private function registry(string $name, array $countries, array $kinds): CivilRegistryInterface

@@ -36,7 +36,8 @@
         "omnistate/annuaire-sante": "French health professionals (RPPS) and facilities (FINESS), through the ANS's FHIR API",
         "omnistate/matchid": "French deaths since 1970 (INSEE's file), through matchID",
         "omnistate/openarchieven": "Births, marriages, deaths and more from the archives of the Netherlands and Belgium, with scans, through Open Archives",
-        "omnistate/national-archives-uk": "The UK National Archives' Discovery catalogue: documents about a person, not civil registration"
+        "omnistate/national-archives-uk": "The UK National Archives' Discovery catalogue: documents about a person, not civil registration",
+        "omnistate/nara": "The US National Archives Catalog: federal files about a person, with links to their scans, not civil registration (an API key)"
     },
     "autoload": {"psr-4": {"Omnistate\\": ""}, "exclude-from-classmap": ["/Tests/", "/docker/"]},
     "autoload-dev": {"psr-4": {"Omnistate\\Tests\\": "Tests/"}},

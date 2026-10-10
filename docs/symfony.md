@@ -25,6 +25,8 @@ omnistate:
     requester: FR53901821074  # your VAT number: VIES answers a consultation number
     matchid:
         token: ~              # raises matchID's quota
+    nara:
+        api_key: '%env(NARA_API_KEY)%'     # the Catalog API key, 10,000 calls a month: the cache (ttl) spares it
     annuaire_sante:
         api_key: '%env(ESANTE_API_KEY)%'   # the Gravitee key; empty: every call answers UnavailableException
 ```
