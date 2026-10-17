@@ -1,6 +1,11 @@
-# glitchr/omnistate
+# omniscient/omnistate
 
 What states and registries know, through one contract - the Omnipay of public registers.
+
+Published as `omniscient/omnistate` (formerly `glitchr/omnistate`, which this package replaces: a
+`composer.json` that still requires the old name keeps resolving to this package and never installs
+both). `omniscient/` is the vendor of every family's core, the providers keep `omnistate/`, the
+namespace `Omnistate\` and the GitHub repositories do not change.
 
 ```php
 $omnistate->company('901 821 074');        // or a SIRET, or FR53901821074
@@ -31,7 +36,7 @@ each source package `symfony/http-client`. Each source is a package of its own:
 ## Plain PHP
 
 ```sh
-composer require glitchr/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
+composer require omniscient/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
 ```
 
 ```php
@@ -120,7 +125,7 @@ second). Put it behind your back office's access control, or give your subclass 
 
 ## Responsibility
 
-`glitchr/omnistate` and its `omnistate/*` providers are independent, unofficial clients: none is
+`omniscient/omnistate` and its `omnistate/*` providers are independent, unofficial clients: none is
 affiliated with, endorsed by or sponsored by the services it reaches. Each service keeps its own
 terms (licence of their data, keys, rate limits, rules on personal data), named with a link in the
 "Responsibility" section of the README of each provider that reaches one. The MIT licence covers

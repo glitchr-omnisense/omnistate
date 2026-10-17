@@ -1,7 +1,7 @@
 # Installation and first calls
 
 ```sh
-composer require glitchr/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
+composer require omniscient/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
 composer require omnistate/matchid omnistate/openarchieven omnistate/national-archives-uk omnistate/nara   # civil registers (nara: with a key)
 composer require omnistate/annuaire-sante                                                   # with a key from the ANS
 ```
@@ -107,7 +107,7 @@ VatNumber::normalize('gr 123456789');      // EL123456789 - each member state's 
 VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the SIREN
 ```
 
-These need `glitchr/omnistate` alone: no source package, no HTTP client.
+These need `omniscient/omnistate` alone: no source package, no HTTP client.
 
 ## Answers kept a while
 
