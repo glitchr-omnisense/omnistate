@@ -1,4 +1,4 @@
-# glitchr/omnistate with every source package, against the real registries:
+# omniscient/omnistate with every source package, against the real registries:
 #
 #   cp .env.dist .env                                    # nothing is needed: the registries asked are open
 #   docker compose run --rm omnistate bare               # plain PHP: no bundle, no container; a company, a VAT number, a domain; what PHP loaded
@@ -13,7 +13,7 @@ name: omnistate-harness
 services:
   omnistate:
     build: .
-    image: glitchr/omnistate-harness
+    image: omniscient/omnistate-harness
     env_file:
       - path: .env
         required: false

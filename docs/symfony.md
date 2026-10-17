@@ -4,7 +4,7 @@ Omnistate runs without a framework ([installation](installation.md)); in a Symfo
 bundle does the wiring. Its components - `symfony/config`, `symfony/dependency-injection`,
 `symfony/http-kernel`, and `symfony/validator`, `symfony/form`, `symfony/routing`,
 `symfony/http-foundation` for the constraints and the company search - are not required by
-`glitchr/omnistate`: the application has them, and nothing of them is loaded outside Symfony.
+`omniscient/omnistate`: the application has them, and nothing of them is loaded outside Symfony.
 
 Register `Omnistate\Bridge\Symfony\OmnistateBundle` (no Flex recipe):
 
