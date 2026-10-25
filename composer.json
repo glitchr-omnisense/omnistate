@@ -25,6 +25,7 @@
         "glitchr/omnistate": "self.version"
     },
     "suggest": {
+        "phpunit/phpunit": "In a register's tests: Omnistate\\Testing\\RegistryContractTests, the family's conformance suite (with symfony/http-client's MockHttpClient)",
         "symfony/cache-contracts": "Answers kept a while: registries change slowly, and some count their calls",
         "symfony/config": "In a Symfony application: the configuration of Omnistate\\Bridge\\Symfony\\OmnistateBundle",
         "symfony/dependency-injection": "In a Symfony application: the services of Omnistate\\Bridge\\Symfony\\OmnistateBundle",

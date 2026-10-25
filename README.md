@@ -122,6 +122,15 @@ second). Put it behind your back office's access control, or give your subclass 
 - [Regulated professionals and facilities](docs/professionals.md)
 - [Civil registers](docs/civil.md)
 - [The Docker harness](docs/harness.md)
+- [Writing a register, the errors' rule and the conformance suite](docs/providers.md)
+
+## Verified, and not
+
+- Run, offline: the conformance suite `Omnistate\Testing\RegistryContractTests` (docs/providers.md)
+  in each of the eight registers (vies, annuaire-entreprises, annuaire-sante, iana, matchid, nara,
+  national-archives-uk, openarchieven), 5 tests each, on their recorded answers (`Tests/Fixtures`),
+  and every package's own tests: 124 tests green in the workspace (path repositories, PHP 8.4).
+- Not run here: the services themselves (`.samples/` in the workspace calls the real ones).
 
 ## Responsibility
 
