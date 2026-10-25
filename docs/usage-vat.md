@@ -3,7 +3,7 @@ title: VAT numbers
 order: 32
 ---
 
-## VAT numbers
+# VAT numbers
 
 `vat()` says whether an intra-EU VAT number exists and whose it is. Its shape is checked first,
 without asking anyone; then the VAT register installed for its country is asked -
@@ -44,7 +44,7 @@ FR39356000000    valid     source vies   SA LA POSTE-DIRECTION GENERALE DE LA PO
 
 (run on 2026-10-25 in the [harness](harness.md), against VIES)
 
-### The shape first
+## The shape first
 
 The facade normalizes the number with `Identifier\VatNumber::normalize()` - spaces, dots and
 dashes go, upper case, `GR` becomes `EL` (VIES's prefix for Greece), and a SIREN or a SIRET
@@ -60,7 +60,7 @@ none does - no VAT register installed - it is a `NotSupportedException` (`No VAT
 installed answers for DE.`). With `omnistate/vies` installed, every well-formed number has a
 register: the shapes and VIES's countries are the same list (`VatNumber::FORMATS`).
 
-### The consultation number
+## The consultation number
 
 Given your own VAT number as the requester, VIES answers a consultation number - the proof that
 the check was made that day, to keep with a reverse-charge invoice:
@@ -83,7 +83,7 @@ The requester is normalized like the number. A requester that has no member stat
 > valid number read as not valid. Check your own number once, alone, before setting it as the
 > requester. Listed in [Verified, and not](verified.md).
 
-### Unavailable is not invalid
+## Unavailable is not invalid
 
 VIES only relays: each member state's service has its hours, and VIES limits concurrent calls.
 `omnistate/vies` reads these answers as `UnavailableException`, never as a number that does not
@@ -105,7 +105,7 @@ On 2026-10-25 France's service answered `MS_MAX_CONCURRENT_REQ` for `FR539018210
 In Symfony, `#[VatNumber(checkExistence: true)]` does the same check in a form, and lets the
 value pass when VIES does not answer ([Constraints](symfony.md#constraints)).
 
-### What is kept
+## What is kept
 
 With a cache, a check is kept `ttl` seconds under the register's name, the normalized number and
 the requester: the same number with another requester is asked again. A kept `VatCheck` carries

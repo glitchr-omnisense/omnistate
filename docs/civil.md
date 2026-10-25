@@ -3,7 +3,7 @@ title: Civil registers
 order: 35
 ---
 
-## Civil registers: acts and documents about people
+# Civil registers: acts and documents about people
 
 What public registers index about a person - births, baptisms, marriages, deaths, burials, and
 the other documents an archive holds - through one contract, `CivilRegistryInterface`.
@@ -30,7 +30,7 @@ $record->url;                     // its page at the register
 $omnistate->civilRecord($record->source, $record->identifier);   // the whole record again: every person, the scans
 ```
 
-### The registers
+## The registers
 
 | Package | Countries | Kinds of records | Picture of the act | Access |
 |---|---|---|---|---|
@@ -57,7 +57,7 @@ $omnistate->civilRegistry('matchid');   // one register by its name, null when n
 `civilRegistries($country, $kind)` keeps the registers that declare that country and that kind;
 it asks no one.
 
-### What each register searches on
+## What each register searches on
 
 A register uses the fields of the `CivilQuery` it can search on and ignores the rest; its
 `supports()` says beforehand whether the question is one for it.
@@ -77,7 +77,7 @@ A register uses the fields of the `CivilQuery` it can search on and ignores the 
 `supports()` is false without a name for all four; matchID refuses a death looked for before 1970.
 Each register's manual has the details.
 
-### An example, live
+## An example, live
 
 ```php
 <?php
@@ -189,7 +189,7 @@ What the run shows:
 - A country no register holds (`JP`) is a `NotSupportedException`, before any request.
 - Discovery's records are documents (kind `other`), dated by the years they cover.
 
-### A register that is down
+## A register that is down
 
 `UnavailableException`, never an empty list: "no answer" is not "no record". `civilRecords($query)`
 asks every register the question is one for; one that is down throws, and takes the others'
@@ -213,7 +213,7 @@ read, Open Archives on an error it answers in the body).
 With a cache, each register's answer to a query is kept under the query's `key()`, a record
 found again under its register and identifier; an exception is never kept.
 
-### The models
+## The models
 
 - `CivilQuery`: `familyName`, `givenName`, `born`, `died`, `dated` (the event's date, whatever it is),
   `place`, `country`, `kinds`, `sex`, `limit` (1 to 100), `page`. A register uses what it can search on.
@@ -229,7 +229,7 @@ found again under its register and identifier; an exception is never kept.
 
 Every property, its type and default: [Concepts](concepts.md#civil-records-civilquery-civilrecord-civilperson-archive-place).
 
-### Symfony
+## Symfony
 
 `OmnistateBundle` registers the civil register packages installed and tags them
 `omnistate.civil_registry`; a class of yours implementing `CivilRegistryInterface` is tagged by
@@ -243,7 +243,7 @@ omnistate:
         api_key: '%env(NARA_API_KEY)%'
 ```
 
-### What is not there
+## What is not there
 
 - England and Wales' births, marriages and deaths: the General Register Office has no public API.
 - The United States' births, marriages and deaths: kept by the states and counties, not by NARA;

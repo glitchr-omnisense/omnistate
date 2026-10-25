@@ -3,7 +3,7 @@ title: Identifiers
 order: 36
 ---
 
-## Identifiers
+# Identifiers
 
 `Omnistate\Identifier\` checks identifiers without asking anyone: their shape and their check
 digit. A well-written identifier can still belong to no one - only a register says that. These
@@ -73,7 +73,7 @@ CountryCode::isValid('UK')               false
 Every `normalize()` removes spaces, dots and dashes first, and answers `null` when what is left
 does not have the identifier's shape.
 
-### Siren
+## Siren
 
 A French company's SIREN: nine digits, the last a Luhn check digit.
 
@@ -83,7 +83,7 @@ A French company's SIREN: nine digits, the last a Luhn check digit.
 | `isValid(?string): bool` | normalized, and the Luhn key right |
 | `toVatNumber(string): string` | the French intra-EU VAT number: `FR` + `(12 + 3 × (SIREN mod 97)) mod 97` on two digits + the SIREN; `\InvalidArgumentException` when it is not nine digits |
 
-### Siret
+## Siret
 
 A French establishment's SIRET: the company's SIREN and a five-digit NIC.
 
@@ -98,7 +98,7 @@ A French establishment's SIRET: the company's SIREN and a five-digit NIC.
 > the sum rule, and `isValid()` refuses it (see the run above). Listed in
 > [Verified, and not](verified.md).
 
-### VatNumber
+## VatNumber
 
 Intra-EU VAT numbers as VIES writes them: a country prefix and the number in each country's shape
 (`VatNumber::FORMATS`, a regular expression per prefix).
@@ -127,7 +127,7 @@ Intra-EU VAT numbers as VIES writes them: a country prefix and the number in eac
 | `isWellFormed(?string): bool` | normalized, and for a French number with a numeric key, the key agreeing with the SIREN (`Siren::toVatNumber()`) |
 | `country(string): string` | the first two letters |
 
-### Rpps
+## Rpps
 
 A French health professional's RPPS number: eleven digits, the last a Luhn check digit. Its
 national form, the IDNPS, is `8` followed by the RPPS.
@@ -139,7 +139,7 @@ national form, the IDNPS, is `8` followed by the RPPS.
 | `toIdnps(string): string` | `8` + the RPPS; `\InvalidArgumentException` when it is not one |
 | `withKey(string $tenDigits): string` | ten digits with their Luhn key appended - a valid fictional number for fixtures; `\InvalidArgumentException` without ten digits |
 
-### Finess
+## Finess
 
 A French health or social facility's FINESS number: nine characters, the département first (two
 digits, or `2A` / `2B` for Corsica), the last a Luhn check digit over the eight before it. A legal
@@ -151,7 +151,7 @@ entity (FINESS juridique) and each of its sites (FINESS géographique) have one 
 | `isValid(?string): bool` | normalized, and the Luhn check right, `A` counting as 0 and `B` as 1 |
 | `department(string): ?string` | the first two characters: `67`, `2A` |
 
-### Luhn and CountryCode
+## Luhn and CountryCode
 
 `Luhn::isValid(string $digits): bool` is the Luhn check (ISO/IEC 7812): every second digit from
 the right doubled; `false` for anything but digits.

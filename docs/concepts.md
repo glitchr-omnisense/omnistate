@@ -3,9 +3,9 @@ title: Concepts
 order: 20
 ---
 
-## Concepts
+# Concepts
 
-### The facade
+## The facade
 
 `Omnistate\Omnistate` (final) holds the registers installed, by kind, and answers the family's
 questions. Its arguments are in the [configuration reference](configuration.md#the-facade); what
@@ -49,13 +49,13 @@ made of the method, the register's name and the normalized question
 ([Configuration](configuration.md#the-cache)). `civilRegistries()`, `civilRegistry()` and
 `civilCountries()` ask no one and are not cached.
 
-### The six contracts
+## The six contracts
 
 A register implements one or more interfaces of `Omnistate\Registry\`. Each has `name(): string`,
 a short name in kebab case (`annuaire-entreprises`) that is the `$source` of every model it
 returns.
 
-#### CompanyRegistryInterface
+### CompanyRegistryInterface
 
 A register of companies.
 
@@ -65,7 +65,7 @@ A register of companies.
 | `company(string $identifier): ?Company` | the company, with the establishment asked for among its establishments when the identifier is one; `null` when the register does not know it |
 | `search(string $query, int $limit = 10): array` | `list<Company>` by name, or anything the register searches on |
 
-#### VatRegistryInterface
+### VatRegistryInterface
 
 A register of VAT numbers.
 
@@ -76,7 +76,7 @@ A register of VAT numbers.
 
 A check that cannot be made is an `UnavailableException`, never a `VatCheck` saying "not valid".
 
-#### ProfessionalRegistryInterface
+### ProfessionalRegistryInterface
 
 A register of regulated professionals.
 
@@ -86,7 +86,7 @@ A register of regulated professionals.
 | `professional(string $identifier): ?Professional` | the professional, `null` when unknown |
 | `search(string $name, ?string $postcode = null, int $limit = 10): array` | `list<Professional>` by name, only those practising in that postcode when one is given |
 
-#### FacilityRegistryInterface
+### FacilityRegistryInterface
 
 A register of health and social facilities. The facade asks it only of the professional
 registers that implement it too.
@@ -96,7 +96,7 @@ registers that implement it too.
 | `supportsFacility(string $identifier): bool` | whether it can answer for that identifier (a FINESS number...) |
 | `facility(string $identifier): ?Facility` | the facility, `null` when unknown |
 
-#### CivilRegistryInterface
+### CivilRegistryInterface
 
 A register of acts and documents about people. It says what it covers, so a screen can tell
 before asking.
@@ -111,7 +111,7 @@ before asking.
 | `search(CivilQuery $query): array` | `list<CivilRecord>`, the likeliest first; none is `[]` |
 | `find(string $identifier): ?CivilRecord` | a record by the identifier a search gave, with everything the register tells; `null` when unknown |
 
-#### InternetRegistryInterface
+### InternetRegistryInterface
 
 The Internet's registries.
 
@@ -123,14 +123,14 @@ The Internet's registries.
 Every method that asks may throw `UnavailableException`; none returns `null` or `[]` for a
 register that did not answer ([the family's rule](errors.md#the-familys-rule)).
 
-### Models
+## Models
 
 All models are `final readonly` classes in `Omnistate\Model`, built with named arguments.
 Whatever a register cannot tell is `null` or an empty list. Countries are ISO 3166-1 alpha-2,
 dates `\DateTimeImmutable` unless they may be partial (`PartialDate`), amounts in the currency's
 major unit. The models that carry `$raw` keep the register's whole answer for what they leave out.
 
-#### Company
+### Company
 
 | Property | Type | Default | |
 |---|---|---|---|
@@ -160,7 +160,7 @@ major unit. The models that carry `$raw` keep the register's whole answer for wh
 `isActive(): bool` is `status === CompanyStatus::ACTIVE`. `establishment(string $identifier):
 ?Establishment` finds the head office or one of `establishments` by its identifier.
 
-#### Establishment
+### Establishment
 
 One of a company's places of business (France: a SIRET).
 
@@ -178,7 +178,7 @@ One of a company's places of business (France: a SIRET).
 
 `isActive(): bool`.
 
-#### Address
+### Address
 
 | Property | Type | Default | |
 |---|---|---|---|
@@ -191,7 +191,7 @@ One of a company's places of business (France: a SIRET).
 
 `(string) $address` is `full`, else street, postal code and city joined by spaces.
 
-#### Activity, LegalForm, Headcount, Manager, FinancialYear
+### Activity, LegalForm, Headcount, Manager, FinancialYear
 
 | Class | Properties | `__toString()` |
 |---|---|---|
@@ -203,7 +203,7 @@ One of a company's places of business (France: a SIRET).
 
 `Headcount::isEmployer()` is true when `max` is set and above 0.
 
-#### VatCheck
+### VatCheck
 
 | Property | Type | Default | |
 |---|---|---|---|
@@ -216,7 +216,7 @@ One of a company's places of business (France: a SIRET).
 
 `country(): string` is the number's first two letters.
 
-#### Domain and Network
+### Domain and Network
 
 | `Domain` property | Type | |
 |---|---|---|
@@ -249,7 +249,7 @@ One of a company's places of business (France: a SIRET).
 `Contact`: `?name`, `?organization`, `?email`, `?country`, `?handle`, `?ianaId` (a registrar's
 IANA ID), `?url`. `(string) $contact` is the organization, else the name, else the handle.
 
-#### Professional, Workplace, Facility, Qualification
+### Professional, Workplace, Facility, Qualification
 
 | `Professional` property | Type | Default | |
 |---|---|---|---|
@@ -284,7 +284,7 @@ its places), `types` (`list<Qualification>`), `?address`, `phones`, `emails`, `s
 `Qualification`: `code`, `system` (the nomenclature: a URL or a short name,
 `TRE_G15-ProfessionSante`), `?label`. `(string)` is the label, else the code.
 
-#### Civil records: CivilQuery, CivilRecord, CivilPerson, Archive, Place
+### Civil records: CivilQuery, CivilRecord, CivilPerson, Archive, Place
 
 `CivilQuery` is what is asked of a civil register:
 
@@ -342,7 +342,7 @@ and the reference.
 written, when no code is known), `?latitude`, `?longitude`. `(string)` is the name and the
 country.
 
-#### PartialDate and Period
+### PartialDate and Period
 
 `PartialDate` is a date as a register knows it: `?year`, `?month` (1 to 12), `?day`. What is not
 known is `null`, never a made-up 1st of January.
@@ -370,7 +370,7 @@ known is `null`, never a made-up 1st of January.
 | `contains(PartialDate $date): bool` | whether the date can fall in it |
 | `(string)` | `1932`, `1970/…`, `1850/1860` |
 
-#### Enums
+### Enums
 
 | Enum | Cases |
 |---|---|

@@ -3,7 +3,7 @@ title: Professionals and facilities
 order: 34
 ---
 
-## Regulated professionals and facilities
+# Regulated professionals and facilities
 
 `Omnistate\Registry\ProfessionalRegistryInterface` is the one contract for the registers of
 regulated professions: France's health professionals (`omnistate/annuaire-sante`, the RPPS),
@@ -16,7 +16,7 @@ $omnistate->professionals('Martin', postcode: '67');  // by name, practising in 
 $omnistate->facility('754567860');                    // a FINESS number
 ```
 
-### An example, on recorded answers
+## An example, on recorded answers
 
 `omnistate/annuaire-sante` needs a key from the ANS; without one at hand, this script runs the
 real register class on the ANS's answers recorded in its `Tests/Fixtures` (fictional people of
@@ -88,7 +88,7 @@ Search "a":
 The workplace's `facility` is `548812` here: the recorded organization has no FINESS, and the
 register's structure id stands in for it.
 
-### A professional
+## A professional
 
 The identifier loses its spaces, dots and dashes, and an IDNPS (`8` + RPPS, what Pro Santé Connect
 and the Annuaire Santé call it) becomes its RPPS. The facade asks the first professional register
@@ -96,7 +96,7 @@ whose `supports()` takes it - `omnistate/annuaire-sante` takes eleven digits, wi
 Luhn key (`Rpps::isValid()` does, and the `#[Rpps]` constraint). Anything else is a
 `NotSupportedException`, before any request; a professional the register does not know is `null`.
 
-### By name
+## By name
 
 `professionals($name, $postcode, $limit)` asks each professional register in turn and answers the
 first non-empty list. With a postcode, only those with a workplace whose postal code starts with
@@ -104,13 +104,13 @@ it are kept (`'67'` keeps the whole Bas-Rhin): `omnistate/annuaire-sante` then a
 practitioners and filters them, so a common name in a small place may find none of those it
 would have found among more. An empty name is `[]`.
 
-### A facility
+## A facility
 
 `facility()` normalizes a FINESS number (`Finess::normalize()`: nine characters, 2A / 2B for
 Corsica) and asks the first professional register that implements `FacilityRegistryInterface`
 too and whose `supportsFacility()` takes it.
 
-### The models
+## The models
 
 | Model | What it holds |
 |---|---|
@@ -124,7 +124,7 @@ How the ANS's FHIR resources are read: [omnistate/annuaire-sante](https://github
 A register that knows facilities too implements `FacilityRegistryInterface` (`supportsFacility()`,
 `facility()`); `Omnistate::facility()` asks the professional registries that do.
 
-### Identifiers, checked without asking anyone
+## Identifiers, checked without asking anyone
 
 ```php
 Rpps::isValid('10003461033');      // eleven digits, Luhn key
@@ -136,7 +136,7 @@ Finess::isValid('580008803');      // nine characters, Luhn key; 2A / 2B for Cor
 
 The `#[Rpps]` and `#[Finess]` constraints check the same ([Constraints](symfony.md#constraints)).
 
-### Symfony
+## Symfony
 
 ```yaml
 omnistate:

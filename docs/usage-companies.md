@@ -3,13 +3,13 @@ title: Companies
 order: 31
 ---
 
-## Companies
+# Companies
 
 `company()` finds a company by its identifier, `search()` by its name. Both ask the company
 registers installed - `omnistate/annuaire-entreprises` for France - and answer `Company` models
 ([Concepts](concepts.md#company)).
 
-### A company by its identifier
+## A company by its identifier
 
 ```php
 <?php
@@ -67,7 +67,7 @@ $omnistate->company('901821075');     // the same: a SIREN whose Luhn key is wro
 
 A company the register does not know is `null`.
 
-### By SIRET: an establishment among the establishments
+## By SIRET: an establishment among the establishments
 
 A SIRET gives the company, with the establishment asked for among its establishments;
 `establishment()` finds it again by its identifier, whether it is the head office or another:
@@ -92,7 +92,7 @@ all of them.
 > `$omnistate->company('35600000000048')` is a `NotSupportedException`; ask by the SIREN
 > `356000000` instead. Observed on 2026-10-25; listed in [Verified, and not](verified.md).
 
-### By name
+## By name
 
 ```php
 echo "\nSearch \"la poste\", 3 at most:\n";
@@ -119,7 +119,7 @@ the establishments that matched.
 For a form that suggests companies as one types, the Symfony bundle has a field and its endpoint:
 [Company search](symfony.md#company-search).
 
-### What a company holds
+## What a company holds
 
 Everything the register gives is mapped, and `raw` keeps its whole answer:
 
@@ -140,7 +140,7 @@ Everything the register gives is mapped, and `raw` keeps its whole answer:
 The register's own manual has the whole mapping and its limits:
 [omnistate/annuaire-entreprises](https://github.com/glitchr-studio/omnistate-annuaire-entreprises).
 
-### Errors
+## Errors
 
 - The register did not answer - HTTP 429 (with `retryAfter`), 5xx, 401/403, no answer, an answer
   that is not JSON: `UnavailableException`. That is not "no such company": ask again later.

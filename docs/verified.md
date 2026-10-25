@@ -3,9 +3,9 @@ title: Verified, and not
 order: 90
 ---
 
-## Verified, and not
+# Verified, and not
 
-### What the tests prove
+## What the tests prove
 
 Run on 2026-10-25 in the [harness](harness.md) image (PHP 8.4.26, PHPUnit 11.5), on the workspace
 that installs the core and the eight registers from their checkouts: `OK (124 tests, 718
@@ -21,7 +21,7 @@ assertions)`. All offline:
   conformance suite `RegistryContractTests` ([Testing](testing.md#the-conformance-suite)), five
   tests each.
 
-### What was run live
+## What was run live
 
 On 2026-10-25, from the harness, against the services (every example of this manual marked
 "run on 2026-10-25" pastes that output):
@@ -36,7 +36,7 @@ On 2026-10-25, from the harness, against the services (every example of this man
 The registers' manuals state their own earlier live runs (matchID, Open Archives and Discovery on
 2026-10-04, NARA with a key on 2026-10-10).
 
-### Not verified
+## Not verified
 
 - The Annuaire Santé was not called: no key at hand. Its examples run on the ANS's recorded
   answers.
@@ -46,7 +46,7 @@ The registers' manuals state their own earlier live runs (matchID, Open Archives
   read from a container built by hand in the harness (`OmnistateBundle`'s extension loaded and
   compiled), and its tests run in the suite above.
 
-### Defects found in the code
+## Defects found in the code
 
 Listed for the code to be fixed; this manual documents what the code does.
 

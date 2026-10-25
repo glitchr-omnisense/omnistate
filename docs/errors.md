@@ -3,7 +3,7 @@ title: Errors
 order: 50
 ---
 
-## Errors
+# Errors
 
 Three exceptions, in `Omnistate\Exception`:
 
@@ -16,7 +16,7 @@ Three exceptions, in `Omnistate\Exception`:
 `UnavailableException::__construct(string $message, ?int $retryAfter = null, ?\Throwable
 $previous = null)`: the HTTP client's exception, when there was one, is the previous exception.
 
-### The family's rule
+## The family's rule
 
 Not knowing is an answer; not answering is not. No register reads one as the other:
 
@@ -35,7 +35,7 @@ answer, try again" on `UnavailableException`. A VAT check that cannot be made is
 `VatCheck` saying "not valid". The conformance suite checks the rule in every register
 ([Testing](testing.md#the-conformance-suite)).
 
-### When each is thrown
+## When each is thrown
 
 `NotSupportedException`, by the facade only:
 
@@ -82,7 +82,7 @@ Other exceptions, from code an application calls directly:
 - `Symfony\Component\Validator\Exception\UnexpectedTypeException`: a constraint validator given
   another constraint (a wiring error).
 
-### What to catch
+## What to catch
 
 ```php
 use Omnistate\Exception\NotSupportedException;

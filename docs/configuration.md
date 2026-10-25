@@ -3,12 +3,12 @@ title: Configuration reference
 order: 40
 ---
 
-## Configuration reference
+# Configuration reference
 
 Omnistate has no configuration file of its own: the facade and each register take their settings
 as constructor arguments. In Symfony, the bundle's tree sets them ([Symfony](symfony.md#configuration)).
 
-### The facade
+## The facade
 
 `new Omnistate\Omnistate(...)`, every argument optional and best given by name:
 
@@ -25,7 +25,7 @@ as constructor arguments. In Symfony, the bundle's tree sets them ([Symfony](sym
 
 The iterables are read once, when the facade is built (a generator is consumed then).
 
-### The cache
+## The cache
 
 With a cache, every question that reaches a register is kept `ttl` seconds under
 `omnistate.<xxh128 hash>` of a key made of what was asked:
@@ -52,7 +52,7 @@ look for the first that finds something.
 `Iana\Bootstrap` takes a cache of its own (often the same pool) for IANA's bootstrap files, kept
 86400 seconds under `omnistate.iana.bootstrap.<dns|ipv4|ipv6|asn>`, whatever the facade's `ttl`.
 
-### The registers
+## The registers
 
 Every register takes the HTTP client to call with first - any
 `Symfony\Contracts\HttpClient\HttpClientInterface`: `HttpClient::create()`, the application's, a
@@ -74,7 +74,7 @@ The `url` arguments exist for a proxy or a test server; none of these services h
 address. What each register does with its settings: its own manual
 ([Registers](index.md#registers)).
 
-### The Symfony bundle
+## The Symfony bundle
 
 | Key | Sets |
 |---|---|
