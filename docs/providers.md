@@ -1,4 +1,9 @@
-# Writing a register
+---
+title: Writing a register
+order: 80
+---
+
+## Writing a register
 
 A register is a package of its own (`omnistate/<service>`, namespace `Omnistate\<Service>\`) that
 requires `omniscient/omnistate` and `symfony/http-client`: one class, built on an
@@ -18,7 +23,7 @@ family's contracts:
 Identifier rules (SIREN, SIRET, VAT numbers, RPPS, FINESS) live in `Omnistate\Identifier\`: a
 register checks the form there and asks nothing about an identifier that is not one.
 
-## Errors: the family's rule
+### Errors: the family's rule
 
 Not knowing is an answer; not answering is not. A register never reads one as the other:
 
@@ -33,7 +38,7 @@ Not knowing is an answer; not answering is not. A register never reads one as th
 
 A VAT check that cannot be made is an `UnavailableException`, never a `VatCheck` saying "not valid".
 
-## Conformance suite
+### Conformance suite
 
 `Omnistate\Testing\RegistryContractTests` is the family's contract as PHPUnit tests, offline. Every
 register's `Tests/<Service>ContractTest.php` uses it:
@@ -85,5 +90,18 @@ What it checks, for each contract the register implements, asked through the `Om
   `$source`, their identifier and name; a civil record is of a kind the register holds, and
   `find()` gives back the record a search named.
 
+Every hook, and what each of the five tests checks: [Testing](testing.md#the-conformance-suite).
+
 Run it with the register's other tests: in the workspace (`~/Sites/omnistate`, path repositories
-and one `phpunit.xml.dist`), or through the Docker harness (`docs/harness.md`).
+and one `phpunit.xml.dist`), or through the Docker harness ([harness](harness.md)): add the
+package to `docker/harness/plugins.php` (its slug, its tests' namespace, its class and the
+facade's argument it is given as) for the harness to install it and run its tests.
+
+### Wiring it
+
+- Plain PHP: give it to the facade under its kind (`companies:`, `vat:`, `professionals:`,
+  `civil:`, `internet:`).
+- Symfony: an application's register is autoconfigured by its contract
+  ([Symfony](symfony.md#an-applications-own-registers)). A package published as `omnistate/<service>`
+  is registered by the bundle only once `OmnistateBundle::loadExtension()` knows its class: until
+  then, the application defines it as a service (autoconfiguration tags it).
