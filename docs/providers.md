@@ -3,7 +3,7 @@ title: Writing a register
 order: 80
 ---
 
-## Writing a register
+# Writing a register
 
 A register is a package of its own (`omnistate/<service>`, namespace `Omnistate\<Service>\`) that
 requires `omniscient/omnistate` and `symfony/http-client`: one class, built on an
@@ -23,7 +23,7 @@ family's contracts:
 Identifier rules (SIREN, SIRET, VAT numbers, RPPS, FINESS) live in `Omnistate\Identifier\`: a
 register checks the form there and asks nothing about an identifier that is not one.
 
-### Errors: the family's rule
+## Errors: the family's rule
 
 Not knowing is an answer; not answering is not. A register never reads one as the other:
 
@@ -38,7 +38,7 @@ Not knowing is an answer; not answering is not. A register never reads one as th
 
 A VAT check that cannot be made is an `UnavailableException`, never a `VatCheck` saying "not valid".
 
-### Conformance suite
+## Conformance suite
 
 `Omnistate\Testing\RegistryContractTests` is the family's contract as PHPUnit tests, offline. Every
 register's `Tests/<Service>ContractTest.php` uses it:
@@ -97,7 +97,7 @@ and one `phpunit.xml.dist`), or through the Docker harness ([harness](harness.md
 package to `docker/harness/plugins.php` (its slug, its tests' namespace, its class and the
 facade's argument it is given as) for the harness to install it and run its tests.
 
-### Wiring it
+## Wiring it
 
 - Plain PHP: give it to the facade under its kind (`companies:`, `vat:`, `professionals:`,
   `civil:`, `internet:`).

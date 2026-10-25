@@ -3,7 +3,7 @@ title: Domains and networks
 order: 33
 ---
 
-## Domains and networks
+# Domains and networks
 
 `domain()` and `network()` ask the Internet registry - `omnistate/iana`'s `Rdap`, which finds
 through IANA's RDAP bootstrap the registry that answers for a domain's top-level domain, an IP
@@ -58,7 +58,7 @@ NULL
 (run on 2026-10-25 in the [harness](harness.md): IANA's bootstrap files, then Verisign's and the
 RIPE NCC's RDAP servers)
 
-### A domain
+## A domain
 
 The name is trimmed, lower-cased and loses its trailing dot (`Example.COM.` is `example.com`); with
 `ext-intl`, an international name is asked in its ASCII form. Something that is not a domain
@@ -71,7 +71,7 @@ page), the `registration`, `expiration` and `last changed` dates, the RDAP statu
 servers, whether the delegation is DNSSEC-signed, and the registrant only when the registry still
 publishes one: a contact with nothing but a handle (redacted, since the GDPR) is `null`.
 
-### An IP range, an autonomous system
+## An IP range, an autonomous system
 
 `network()` takes an IPv4 or IPv6 address (the most specific range of IANA's `ipv4` or `ipv6`
 bootstrap names the regional registry), or an AS number with or without `AS` (`AS3333`, `3333`;
@@ -79,7 +79,7 @@ the `asn` bootstrap). The answer is the range - its handle, name, type, country,
 address - or the autonomous system - its numbers -, its holder (`registrant`) and its abuse
 contact, looked for among nested entities too.
 
-### The bootstrap files
+## The bootstrap files
 
 `Iana\Bootstrap` reads IANA's four bootstrap files (`https://data.iana.org/rdap/dns.json`,
 `ipv4.json`, `ipv6.json`, `asn.json`) the first time each is needed, and keeps them in memory for
@@ -96,7 +96,7 @@ $omnistate = new Omnistate(internet: $rdap, cache: $cache);   // the answers too
 
 The Symfony bundle gives `Bootstrap` the same cache pool as the facade.
 
-### Errors
+## Errors
 
 - IANA's bootstrap not answering, an HTTP error on it, an answer that is not JSON:
   `UnavailableException` (`retryAfter` from a 429's `Retry-After`, else 60 s).

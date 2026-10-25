@@ -3,14 +3,14 @@ title: Testing
 order: 60
 ---
 
-## Testing
+# Testing
 
 Omnistate ships no fake register: the contracts are small enough for a test to implement one, and
 every register takes its HTTP client, so a `MockHttpClient` (from `symfony/http-client`, which
 every register already requires) puts recorded answers in place of the service. Neither way
 reaches the network.
 
-### An application's code: a register of its own
+## An application's code: a register of its own
 
 The facade takes any implementation of the contracts. An anonymous class answers what the test
 needs:
@@ -94,7 +94,7 @@ Each register's own tests show its recorded answers: `Tests/Fixtures/*.json` in 
 `omnistate/*` package, which ship with the package and can be served by a `MockHttpClient`
 ([an example](professionals.md#an-example-on-recorded-answers)).
 
-### In Symfony
+## In Symfony
 
 In a functional test, replace the `http_client` service the registers are built on by a
 `MockHttpClient` (`framework.http_client.mock_response_factory` in the test environment), or
@@ -102,7 +102,7 @@ replace `Omnistate\Omnistate` itself (`static::getContainer()->set(Omnistate::cl
 service being public). The bundle's own tests build a container by hand with a synthetic
 `http_client` (`Tests/Bridge/OmnistateBundleTest.php`).
 
-### The conformance suite
+## The conformance suite
 
 `Omnistate\Testing\RegistryContractTests` is the family's contract as a PHPUnit trait, offline.
 Every register's `Tests/<Service>ContractTest.php` uses it, and a register an application writes
@@ -137,7 +137,7 @@ final class MatchIdContractTest extends TestCase
 }
 ```
 
-#### What a test case gives
+### What a test case gives
 
 | Method | Required | Default | |
 |---|---|---|---|
@@ -158,7 +158,7 @@ The suite's client answers each request from `recordedAnswers()` by its method a
 then its method and path, then `*`; a request with none is answered HTTP 404, and when a test then
 fails on an `UnavailableException` the message names every request that had no recorded answer.
 
-#### The five tests
+### The five tests
 
 `testItImplementsTheFamilysContractsUnderItsName` - the register implements one of the six
 contracts at least, and `name()` is kebab case (`^[a-z0-9]+(-[a-z0-9]+)*$`). A civil register

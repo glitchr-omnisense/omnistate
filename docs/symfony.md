@@ -3,7 +3,7 @@ title: Symfony
 order: 15
 ---
 
-## Symfony
+# Symfony
 
 Omnistate runs without a framework ([installation](installation.md)); in a Symfony application its
 bundle does the wiring. Its components - `symfony/config`, `symfony/dependency-injection`,
@@ -11,7 +11,7 @@ bundle does the wiring. Its components - `symfony/config`, `symfony/dependency-i
 `symfony/http-foundation` for the constraints and the company search - are not required by
 `omniscient/omnistate`: the application has them, and nothing of them is loaded outside Symfony.
 
-### Registering the bundle
+## Registering the bundle
 
 There is no Flex recipe: add the bundle by hand.
 
@@ -23,7 +23,7 @@ return [
 ];
 ```
 
-### Configuration
+## Configuration
 
 ```yaml
 # config/packages/omnistate.yaml
@@ -65,7 +65,7 @@ and the other registers' base addresses keep their defaults. An application that
 value defines the register's service itself ([An application's own
 registers](#an-applications-own-registers)).
 
-### Services
+## Services
 
 The bundle registers each register whose class exists - the packages installed - on the
 application's `http_client` service, with `omnistate.timeout`:
@@ -114,7 +114,7 @@ with its suggestions list and script in every form.
 The bundle registers no command, no event, no Twig function, and no route of its own: the
 company search's route exists only once the application imports it.
 
-### An application's own registers
+## An application's own registers
 
 A class of the application that implements one of these contracts is autoconfigured - tagged -
 and the facade asks it too. The facade asks the registers of a kind in the order of the tagged
@@ -147,7 +147,7 @@ services:
         tags: [omnistate.civil_registry]
 ```
 
-### Constraints
+## Constraints
 
 Five constraints in `Omnistate\Bridge\Symfony\Validator`, each an attribute on a property or a
 method, repeatable, with its own `message` (and `groups`, `payload`). A `null` or `''` value
@@ -193,7 +193,7 @@ Without the bundle (a validator built by hand) `VatNumberValidator` has no facad
 into its French VAT number: `901821074` in a VAT number field passes (and is checked with VIES as
 `FR53901821074`). Store the normalized number, not what was typed, when that matters.
 
-### Company search
+## Company search
 
 `CompanySearchType` is a search field that suggests companies as one types and, on a pick, fills
 the sibling fields named in `fill`:

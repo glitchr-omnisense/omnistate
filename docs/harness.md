@@ -3,7 +3,7 @@ title: The Docker harness
 order: 70
 ---
 
-## The Docker harness
+# The Docker harness
 
 `docker/` runs this package with every `omnistate/*` source installed - from GitHub (branch 1.x),
 or from the checkouts beside this one when `OMNISTATE_PLUGINS=../..` is set in `docker/.env` -
@@ -22,7 +22,7 @@ docker compose run --rm omnistate bare
 | `test` | every package's tests (PHPUnit; arguments after `test` are passed on) |
 | `composer ...`, `sh`, `php ...` | run as they are, in `/harness` |
 
-### Settings
+## Settings
 
 `docker/.env` (copied from `docker/.env.dist`, git-ignored) holds two variables, both optional:
 
@@ -41,7 +41,7 @@ one is there, else from `https://github.com/glitchr-studio/omnistate-<slug>.git`
 PHPUnit suite per package. Composer installs when there is no `vendor/`, and updates when
 `composer.json` changed.
 
-### Bare: no bundle, no container
+## Bare: no bundle, no container
 
 One PHP script, `docker/harness/bin/bare`, that requires the autoloader and nothing else. It
 builds `Omnistate\Omnistate` from the source packages installed - each registry given the HTTP

@@ -3,7 +3,7 @@ title: Installation
 order: 10
 ---
 
-## Installation
+# Installation
 
 ```sh
 composer require omniscient/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
@@ -11,7 +11,7 @@ composer require omnistate/matchid omnistate/openarchieven omnistate/national-ar
 composer require omnistate/annuaire-sante                                                   # with a key from the ANS
 ```
 
-### Requirements
+## Requirements
 
 - PHP 8.2 or later.
 - `omniscient/omnistate` requires `symfony/http-client-contracts` (^3.0) and nothing else.
@@ -26,7 +26,7 @@ composer require omnistate/annuaire-sante                                       
 Omnistate needs no framework. It runs the same in plain PHP, in a worker, in Laravel or Slim, and
 in Symfony, where a bundle does the wiring ([Symfony](symfony.md)).
 
-### Plain PHP
+## Plain PHP
 
 ```php
 <?php // bare.php
@@ -102,7 +102,7 @@ No class of a framework is loaded on the way - a test of this package checks it 
 its own (`Tests/BareTest.php`), and so does `docker compose run --rm omnistate bare`
 ([harness](harness.md)).
 
-### One registry
+## One registry
 
 Each registry can be used without the facade: it is the contract's methods, nothing more. The
 facade adds what is common to all - identifiers normalized, the question routed to the register
@@ -122,7 +122,7 @@ Called directly, a registry expects its identifier already normalized (`Vies::ch
 identifier that is not one (`AnnuaireSante::professional('x')`): the facade does both checks
 before asking.
 
-### Identifiers, without asking anyone
+## Identifiers, without asking anyone
 
 ```php
 use Omnistate\Identifier\{Siren, Siret, VatNumber};
@@ -136,7 +136,7 @@ VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the 
 These need `omniscient/omnistate` alone: no source package, no HTTP client. All of them:
 [Identifiers](usage-identifiers.md).
 
-### Answers kept a while
+## Answers kept a while
 
 ```php
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;   // composer require symfony/cache
@@ -148,7 +148,7 @@ Registers change slowly, and some count their calls. An exception is never kept:
 did not answer is asked again next time. What is kept and under which key:
 [Configuration](configuration.md#the-cache).
 
-### In a framework
+## In a framework
 
 - **Symfony**: `Omnistate\Bridge\Symfony\OmnistateBundle` registers every source installed on the
   application's `http_client`, autowires `Omnistate\Omnistate` with a cache pool, and brings the
@@ -162,7 +162,7 @@ did not answer is asked again next time. What is kept and under which key:
 - **Any other**: build `Omnistate` once, where the framework builds its services (a service
   provider, a container definition), as the script above does.
 
-### Errors, in short
+## Errors, in short
 
 | Exception | When |
 |---|---|

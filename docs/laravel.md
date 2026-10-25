@@ -3,7 +3,7 @@ title: Laravel
 order: 16
 ---
 
-## Laravel
+# Laravel
 
 omnibridge/laravel, the bridge that hosts omnibase in Laravel, has no Omnistate provider, and
 there is no other Laravel package for Omnistate. None is needed: the facade is plain PHP, and a
