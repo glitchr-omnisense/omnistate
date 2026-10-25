@@ -1,4 +1,9 @@
-# The Docker harness
+---
+title: The Docker harness
+order: 70
+---
+
+## The Docker harness
 
 `docker/` runs this package with every `omnistate/*` source installed - from GitHub (branch 1.x),
 or from the checkouts beside this one when `OMNISTATE_PLUGINS=../..` is set in `docker/.env` -
@@ -14,9 +19,29 @@ docker compose run --rm omnistate bare
 | `bare` | plain PHP: `Omnistate\Omnistate` built by hand, a company, a VAT number and a domain asked, what PHP loaded |
 | `bare --recorded` | the same on the answers kept in `docker/harness/recorded/`, without a call |
 | `bare --json` | the same, whole: every class loaded, every file since the autoloader |
-| `test` | every package's tests |
+| `test` | every package's tests (PHPUnit; arguments after `test` are passed on) |
+| `composer ...`, `sh`, `php ...` | run as they are, in `/harness` |
 
-## Bare: no bundle, no container
+### Settings
+
+`docker/.env` (copied from `docker/.env.dist`, git-ignored) holds two variables, both optional:
+
+| Variable | | 
+|---|---|
+| `OMNISTATE_PLUGINS` | where the sources' checkouts are, relative to `docker/` (`../..` when this core sits in the workspace beside them); unset, `docker/plugins` (empty) is mounted and every source comes from GitHub |
+| `OMNISTATE_REQUESTER` | your own VAT number, sent with `bare`'s VAT check: VIES then answers a consultation number |
+
+`bare` also reads `OMNISTATE_AUTOLOAD`, the autoloader to require in place of the harness's
+`/harness/vendor/autoload.php`.
+
+At each start the entrypoint runs `docker/harness/setup.php`, which writes the harness's
+`composer.json` and `phpunit.xml` in the `harness` volume: this core from its checkout, each
+source (the list is `docker/harness/plugins.php`) from its checkout under `OMNISTATE_PLUGINS` when
+one is there, else from `https://github.com/glitchr-studio/omnistate-<slug>.git`, branch 1.x; one
+PHPUnit suite per package. Composer installs when there is no `vendor/`, and updates when
+`composer.json` changed.
+
+### Bare: no bundle, no container
 
 One PHP script, `docker/harness/bin/bare`, that requires the autoloader and nothing else. It
 builds `Omnistate\Omnistate` from the source packages installed - each registry given the HTTP
@@ -60,6 +85,11 @@ Classes of a framework (DependencyInjection, Config, HttpKernel, HttpFoundation,
 does not answer is said, never read as "not valid". With `--recorded`, the VAT number reads
 `valid, SARL GLITCH ART, 5 RUE VINCENT SCOTTO, 67400 ILLKIRCH GRAFFENSTADEN`, as answered on
 2026-09-29.)
+
+Run again on 2026-10-25 (the same image, against the workspace's installed packages): the same
+lines, France's VIES service again answering `MS_MAX_CONCURRENT_REQ`; with `--recorded`, the VAT
+line `valid, SARL GLITCH ART, 5 RUE VINCENT SCOTTO, 67400 ILLKIRCH GRAFFENSTADEN`. Every package's
+tests, the same day: `OK (124 tests, 718 assertions)`.
 
 `Tests/BareTest.php` runs `bare --recorded --json` in a process of its own and checks the list.
 The files Composer requires together with the autoloader are not counted: they are loaded by

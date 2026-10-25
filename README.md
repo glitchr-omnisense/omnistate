@@ -117,12 +117,20 @@ second). Put it behind your back office's access control, or give your subclass 
 
 ## Documentation
 
+- [Overview and the registers](docs/index.md)
 - [Installation and first calls](docs/installation.md): plain PHP first
-- [Symfony](docs/symfony.md)
-- [Regulated professionals and facilities](docs/professionals.md)
-- [Civil registers](docs/civil.md)
+- [Symfony](docs/symfony.md) and [Laravel](docs/laravel.md)
+- [Concepts](docs/concepts.md): the facade, the contracts, every model
+- Usage: [companies](docs/usage-companies.md), [VAT numbers](docs/usage-vat.md),
+  [domains and networks](docs/usage-internet.md),
+  [regulated professionals and facilities](docs/professionals.md),
+  [civil registers](docs/civil.md), [identifiers](docs/usage-identifiers.md)
+- [Configuration reference](docs/configuration.md)
+- [Errors](docs/errors.md)
+- [Testing](docs/testing.md): fakes, recorded answers, the conformance suite
 - [The Docker harness](docs/harness.md)
 - [Writing a register, the errors' rule and the conformance suite](docs/providers.md)
+- [Verified, and not](docs/verified.md)
 
 ## Verified, and not
 
