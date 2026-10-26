@@ -133,12 +133,12 @@ Everything the register gives is mapped, and `raw` keeps its whole answer:
 | `headcount` | INSEE's range code, its bounds and year |
 | `managers` | people (`person`, `firstNames`, `birthYear`, `nationality`) and companies (`identifier`: their SIREN) |
 | `finances` | revenue and net income by year, newest first, in euros |
-| `labels` | 17 flags of the answer's complements ([the list](https://github.com/glitchr-studio/omnistate-annuaire-entreprises/blob/1.x/docs/index.md#behaviour)) |
+| `labels` | 17 flags of the answer's complements ([the list](https://github.com/glitchr-omnisense/omnistate-annuaire-entreprises/blob/1.x/docs/index.md#behaviour)) |
 | `collectiveAgreements` | the IDCC codes |
 | `vatNumber` | derived from the SIREN (`Siren::toVatNumber()`), VIES not asked |
 
 The register's own manual has the whole mapping and its limits:
-[omnistate/annuaire-entreprises](https://github.com/glitchr-studio/omnistate-annuaire-entreprises).
+[omnistate/annuaire-entreprises](https://github.com/glitchr-omnisense/omnistate-annuaire-entreprises).
 
 ## Errors
 

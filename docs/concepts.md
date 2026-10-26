@@ -151,7 +151,7 @@ major unit. The models that carry `$raw` keep the register's whole answer for wh
 | `establishmentCount`, `openEstablishmentCount` | `?int` | `null` | how many the register counts, open or not |
 | `managers` | `list<Manager>` | `[]` | |
 | `finances` | `list<FinancialYear>` | `[]` | newest first |
-| `labels` | `list<string>` | `[]` | what it is recognized as: `ess`, `rge`, `qualiopi`... ([the list](https://github.com/glitchr-studio/omnistate-annuaire-entreprises/blob/1.x/docs/index.md#behaviour)) |
+| `labels` | `list<string>` | `[]` | what it is recognized as: `ess`, `rge`, `qualiopi`... ([the list](https://github.com/glitchr-omnisense/omnistate-annuaire-entreprises/blob/1.x/docs/index.md#behaviour)) |
 | `collectiveAgreements` | `list<string>` | `[]` | the collective agreements it applies (France: IDCC codes) |
 | `vatNumber` | `?string` | `null` | its VAT number (France: derived from the SIREN, VIES not asked) |
 | `updatedAt` | `?\DateTimeImmutable` | `null` | when the register last changed it |
