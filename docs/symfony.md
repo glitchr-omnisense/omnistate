@@ -9,7 +9,7 @@ Omnistate runs without a framework ([installation](installation.md)); in a Symfo
 bundle does the wiring. Its components - `symfony/config`, `symfony/dependency-injection`,
 `symfony/http-kernel`, and `symfony/validator`, `symfony/form`, `symfony/routing`,
 `symfony/http-foundation` for the constraints and the company search - are not required by
-`omniscient/omnistate`: the application has them, and nothing of them is loaded outside Symfony.
+`omnisense/omnistate`: the application has them, and nothing of them is loaded outside Symfony.
 
 ## Registering the bundle
 
@@ -248,7 +248,7 @@ name `omnistate_company_search`). Route it by importing the bridge's controllers
 ```yaml
 # config/routes/omnistate.yaml
 omnistate:
-    resource: '../../vendor/omniscient/omnistate/Bridge/Symfony/Controller/'
+    resource: '../../vendor/omnisense/omnistate/Bridge/Symfony/Controller/'
     type: attribute
 ```
 

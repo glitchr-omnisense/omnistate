@@ -6,7 +6,7 @@ order: 80
 # Writing a register
 
 A register is a package of its own (`omnistate/<service>`, namespace `Omnistate\<Service>\`) that
-requires `omniscient/omnistate` and `symfony/http-client`: one class, built on an
+requires `omnisense/omnistate` and `symfony/http-client`: one class, built on an
 `HttpClientInterface` (and a key where the service wants one), implementing one or more of the
 family's contracts:
 

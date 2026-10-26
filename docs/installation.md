@@ -6,7 +6,7 @@ order: 10
 # Installation
 
 ```sh
-composer require omniscient/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
+composer require omnisense/omnistate omnistate/annuaire-entreprises omnistate/vies omnistate/iana
 composer require omnistate/matchid omnistate/openarchieven omnistate/national-archives-uk omnistate/nara   # civil registers (nara: with a key)
 composer require omnistate/annuaire-sante                                                   # with a key from the ANS
 ```
@@ -14,8 +14,8 @@ composer require omnistate/annuaire-sante                                       
 ## Requirements
 
 - PHP 8.2 or later.
-- `omniscient/omnistate` requires `symfony/http-client-contracts` (^3.0) and nothing else.
-- Each register requires `omniscient/omnistate` and `symfony/http-client` (^6.4, ^7.0 or ^8.0), a
+- `omnisense/omnistate` requires `symfony/http-client-contracts` (^3.0) and nothing else.
+- Each register requires `omnisense/omnistate` and `symfony/http-client` (^6.4, ^7.0 or ^8.0), a
   library that stands alone and loads no framework.
 - `omnistate/iana` suggests `ext-intl`: with it, an international domain name (`café.fr`) is
   turned into its ASCII form (`idn_to_ascii`) before it is asked; without it, such a name is asked
@@ -133,7 +133,7 @@ VatNumber::normalize('gr 123456789');      // EL123456789 - each member state's 
 VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the SIREN
 ```
 
-These need `omniscient/omnistate` alone: no source package, no HTTP client. All of them:
+These need `omnisense/omnistate` alone: no source package, no HTTP client. All of them:
 [Identifiers](usage-identifiers.md).
 
 ## Answers kept a while

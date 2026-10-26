@@ -7,7 +7,7 @@ order: 36
 
 `Omnistate\Identifier\` checks identifiers without asking anyone: their shape and their check
 digit. A well-written identifier can still belong to no one - only a register says that. These
-classes need `omniscient/omnistate` alone (no register, no HTTP client); the facade and the
+classes need `omnisense/omnistate` alone (no register, no HTTP client); the facade and the
 registers use them before any request, and the Symfony constraints are built on them.
 
 ```php

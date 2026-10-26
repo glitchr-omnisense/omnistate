@@ -119,7 +119,7 @@ too and whose `supportsFacility()` takes it.
 | `Facility` | `identifier` (FINESS), `name`, `kind` (`legal` entity or `site`), `types`, `address`, `phones`, `emails`, `secureEmails`, `identifiers`, `active` |
 
 Every property, its type and default: [Concepts](concepts.md#professional-workplace-facility-qualification).
-How the ANS's FHIR resources are read: [omnistate/annuaire-sante](https://github.com/glitchr-studio/omnistate-annuaire-sante).
+How the ANS's FHIR resources are read: [omnistate/annuaire-sante](https://github.com/glitchr-omnisense/omnistate-annuaire-sante).
 
 A register that knows facilities too implements `FacilityRegistryInterface` (`supportsFacility()`,
 `facility()`); `Omnistate::facility()` asks the professional registries that do.

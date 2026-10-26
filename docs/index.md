@@ -1,4 +1,4 @@
-# omniscient/omnistate
+# omnisense/omnistate
 
 Omnistate is one PHP contract for what states and public registers know. An application asks the
 same questions whatever register answers them - who is this company, does this VAT number exist,
@@ -28,7 +28,7 @@ requires `symfony/http-client-contracts` and nothing else; each register require
 that want the wiring done, with validation constraints and a company search field
 ([Symfony](symfony.md)).
 
-Published as `omniscient/omnistate`, formerly `glitchr/omnistate`: the package `replace`s the old
+Published as `omnisense/omnistate`, formerly `glitchr/omnistate`: the package `replace`s the old
 name, so a `composer.json` that still requires `glitchr/omnistate` resolves to this package and
 never installs both. The namespace is `Omnistate\`; registers keep the `omnistate/` vendor and the
 `Omnistate\<Service>\` namespace.
@@ -55,14 +55,14 @@ HEAD).
 
 | Package | Class | Contract | Takes | Access |
 |---|---|---|---|---|
-| [`omnistate/annuaire-entreprises`](https://github.com/glitchr-studio/omnistate-annuaire-entreprises) | `AnnuaireEntreprises\AnnuaireEntreprises` | company | a valid SIREN or SIRET; search by anything | open, no key |
-| [`omnistate/vies`](https://github.com/glitchr-studio/omnistate-vies) | `Vies\Vies` | VAT | the 27 member states' numbers (EL for Greece) and XI (Northern Ireland) | open, no key |
-| [`omnistate/iana`](https://github.com/glitchr-studio/omnistate-iana) | `Iana\Rdap` (with `Iana\Bootstrap`) | Internet | domain names, IPv4 and IPv6 addresses, AS numbers | open, no key |
-| [`omnistate/annuaire-sante`](https://github.com/glitchr-studio/omnistate-annuaire-sante) | `AnnuaireSante\AnnuaireSante` | professional, facility | an RPPS (or IDNPS) number; a FINESS number | free key (ANS Gravitee portal) |
-| [`omnistate/matchid`](https://github.com/glitchr-studio/omnistate-matchid) | `MatchId\MatchId` | civil | FR, deaths, since 1970, a name needed | open, no key (a token optional) |
-| [`omnistate/openarchieven`](https://github.com/glitchr-studio/omnistate-openarchieven) | `OpenArchieven\OpenArchieven` | civil | NL, BE, FR, SR; births, baptisms, marriages, deaths, burials, other; scans | open, no key |
-| [`omnistate/national-archives-uk`](https://github.com/glitchr-studio/omnistate-national-archives-uk) | `NationalArchivesUk\NationalArchivesUk` | civil | GB, catalogue entries (kind `other`) only | open, no key |
-| [`omnistate/nara`](https://github.com/glitchr-studio/omnistate-nara) | `Nara\Nara` | civil | US, catalogue entries (kind `other`) only; links to scans | free key (10,000 calls a month) |
+| [`omnistate/annuaire-entreprises`](https://github.com/glitchr-omnisense/omnistate-annuaire-entreprises) | `AnnuaireEntreprises\AnnuaireEntreprises` | company | a valid SIREN or SIRET; search by anything | open, no key |
+| [`omnistate/vies`](https://github.com/glitchr-omnisense/omnistate-vies) | `Vies\Vies` | VAT | the 27 member states' numbers (EL for Greece) and XI (Northern Ireland) | open, no key |
+| [`omnistate/iana`](https://github.com/glitchr-omnisense/omnistate-iana) | `Iana\Rdap` (with `Iana\Bootstrap`) | Internet | domain names, IPv4 and IPv6 addresses, AS numbers | open, no key |
+| [`omnistate/annuaire-sante`](https://github.com/glitchr-omnisense/omnistate-annuaire-sante) | `AnnuaireSante\AnnuaireSante` | professional, facility | an RPPS (or IDNPS) number; a FINESS number | free key (ANS Gravitee portal) |
+| [`omnistate/matchid`](https://github.com/glitchr-omnisense/omnistate-matchid) | `MatchId\MatchId` | civil | FR, deaths, since 1970, a name needed | open, no key (a token optional) |
+| [`omnistate/openarchieven`](https://github.com/glitchr-omnisense/omnistate-openarchieven) | `OpenArchieven\OpenArchieven` | civil | NL, BE, FR, SR; births, baptisms, marriages, deaths, burials, other; scans | open, no key |
+| [`omnistate/national-archives-uk`](https://github.com/glitchr-omnisense/omnistate-national-archives-uk) | `NationalArchivesUk\NationalArchivesUk` | civil | GB, catalogue entries (kind `other`) only | open, no key |
+| [`omnistate/nara`](https://github.com/glitchr-omnisense/omnistate-nara) | `Nara\Nara` | civil | US, catalogue entries (kind `other`) only; links to scans | free key (10,000 calls a month) |
 
 Five of the eight are open: no account and no key. Each register's own manual lists its
 endpoints, options, mapping and limits.

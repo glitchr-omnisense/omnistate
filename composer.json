@@ -1,5 +1,5 @@
 {
-    "name": "omniscient/omnistate",
+    "name": "omnisense/omnistate",
     "type": "library",
     "description": "Omnistate: one contract for what states and registries know - companies, VAT numbers, domains and networks (the Omnipay of public registers).",
     "keywords": ["company", "registry", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc", "civil registry", "genealogy"],
@@ -22,6 +22,7 @@
         "symfony/validator": "^6.4|^7.0|^8.0"
     },
     "replace": {
+        "omniscient/omnistate": "self.version",
         "glitchr/omnistate": "self.version"
     },
     "suggest": {

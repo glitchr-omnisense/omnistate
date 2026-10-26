@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Every source package: its slug (omnistate/<slug>, github.com/glitchr-studio/omnistate-<slug>),
+ * Every source package: its slug (omnistate/<slug>, github.com/glitchr-omnisense/omnistate-<slug>),
  * its tests' namespace, its registry class and what it is a registry of -
  * the argument of Omnistate\Omnistate it is given as.
  */

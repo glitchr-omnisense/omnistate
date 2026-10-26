@@ -37,7 +37,7 @@ docker compose run --rm omnistate bare
 At each start the entrypoint runs `docker/harness/setup.php`, which writes the harness's
 `composer.json` and `phpunit.xml` in the `harness` volume: this core from its checkout, each
 source (the list is `docker/harness/plugins.php`) from its checkout under `OMNISTATE_PLUGINS` when
-one is there, else from `https://github.com/glitchr-studio/omnistate-<slug>.git`, branch 1.x; one
+one is there, else from `https://github.com/glitchr-omnisense/omnistate-<slug>.git`, branch 1.x; one
 PHPUnit suite per package. Composer installs when there is no `vendor/`, and updates when
 `composer.json` changed.
 
