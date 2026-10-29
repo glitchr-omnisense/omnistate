@@ -93,11 +93,6 @@ A French establishment's SIRET: the company's SIREN and a five-digit NIC.
 | `isValid(?string): bool` | its SIREN valid, and the fourteen digits pass the Luhn check - La Poste's (SIREN `356000000`) also when the sum of the digits is a multiple of 5, the rule its establishments follow (its head office `35600000000048` passes Luhn) |
 | `siren(string): string` | its first nine digits; `\InvalidArgumentException` when it is not fourteen digits |
 
-> [!WARNING]
-> The register writes La Poste's head office `35600000000048`: it passes the Luhn check but not
-> the sum rule, and `isValid()` refuses it (see the run above). Listed in
-> [Verified, and not](verified.md).
-
 ## VatNumber
 
 Intra-EU VAT numbers as VIES writes them: a country prefix and the number in each country's shape
