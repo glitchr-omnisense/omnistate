@@ -85,12 +85,9 @@ d'entreprises API, the establishments that matched the question - without the he
 is `headOffice`. `establishmentCount` and `openEstablishmentCount` are the register's counts of
 all of them.
 
-> [!WARNING]
-> `Identifier\Siret::isValid()` refuses La Poste's head office as the register writes it
-> (`35600000000048`): its La Poste rule exempts the NIC `00012` from the sum-of-digits check,
-> while the register's head office is `00048`, which passes the plain Luhn check. So
-> `$omnistate->company('35600000000048')` is a `NotSupportedException`; ask by the SIREN
-> `356000000` instead. Observed on 2026-10-25; listed in [Verified, and not](verified.md).
+La Poste's establishments are asked by their SIRET like any other: their numbers pass the Luhn
+check or, La Poste's own rule, have digits summing to a multiple of 5 - its head office,
+`35600000000048` as the register writes it, passes Luhn.
 
 ## By name
 

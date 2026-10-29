@@ -50,11 +50,6 @@ The registers' manuals state their own earlier live runs (matchID, Open Archives
 
 Listed for the code to be fixed; this manual documents what the code does.
 
-- `Identifier/Siret.php:29-30` - La Poste's rule exempts the NIC `00012` from the sum-of-digits
-  check, but the register gives La Poste's head office as `35600000000048`, which passes the Luhn
-  check and fails the sum rule: `Siret::isValid('35600000000048')` is `false`, so
-  `AnnuaireEntreprises::supports()` refuses it and `$omnistate->company('35600000000048')` is a
-  `NotSupportedException` (observed on 2026-10-25). The `#[Siret]` constraint refuses it too.
 - `omnistate/annuaire-sante`, `AnnuaireSante.php:515` - a `Retry-After` written as an HTTP date is
   cast to `0`: `retryAfter` is then 0, where the suite asks for a positive number (it only tests a
   number of seconds).

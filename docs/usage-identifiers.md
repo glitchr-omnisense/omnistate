@@ -50,7 +50,7 @@ $show("CountryCode::isValid('UK')", CountryCode::isValid('UK'));
 Siren::normalize('901 821 074')          '901821074'
 Siren::isValid('901821075')              false
 Siren::toVatNumber('356000000')          'FR39356000000'
-Siret::isValid('35600000000048')         false
+Siret::isValid('35600000000048')         true
 Siret::siren('901 821 074 00019')        '901821074'
 VatNumber::normalize('gr 123456789')     'EL123456789'
 VatNumber::normalize('90182107400019')   'FR53901821074'
@@ -68,7 +68,7 @@ CountryCode::alpha3('nl')                'NLD'
 CountryCode::isValid('UK')               false
 ```
 
-(run on 2026-10-25 in the [harness](harness.md); no network)
+(run on 2026-10-29 in the [harness](harness.md); no network)
 
 Every `normalize()` removes spaces, dots and dashes first, and answers `null` when what is left
 does not have the identifier's shape.
@@ -90,7 +90,7 @@ A French establishment's SIRET: the company's SIREN and a five-digit NIC.
 | Method | |
 |---|---|
 | `normalize(?string): ?string` | fourteen digits, or `null` |
-| `isValid(?string): bool` | its SIREN valid, and the fourteen digits pass the Luhn check - except La Poste's (SIREN `356000000`): for a NIC other than `00012`, the sum of the digits must be a multiple of 5 |
+| `isValid(?string): bool` | its SIREN valid, and the fourteen digits pass the Luhn check - La Poste's (SIREN `356000000`) also when the sum of the digits is a multiple of 5, the rule its establishments follow (its head office `35600000000048` passes Luhn) |
 | `siren(string): string` | its first nine digits; `\InvalidArgumentException` when it is not fourteen digits |
 
 > [!WARNING]

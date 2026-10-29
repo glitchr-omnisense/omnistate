@@ -26,6 +26,8 @@ final class IdentifierTest extends TestCase
         // La Poste: the sum of the digits, a multiple of 5 - not Luhn.
         self::assertTrue(Siret::isValid('35600000000010'));
         self::assertFalse(Siret::isValid('35600000000011'));
+        // Its head office, as the register gives it: Luhn-valid, its digits' sum 26.
+        self::assertTrue(Siret::isValid('35600000000048'));
     }
 
     public function testAFrenchVatNumberIsItsSirenWithAKey(): void
