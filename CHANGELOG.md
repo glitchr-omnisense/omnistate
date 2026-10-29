@@ -2,6 +2,11 @@
 
 ## Unreleased (1.x)
 
+### Added
+- `Omnistate\Http\Redaction`: a request's secrets (`secrets()`), a text without them (`text()`), a
+  failure's copy to wrap in its place (`copy()`), a trace without arguments (`withoutArguments()`),
+  for the registers that call with a key or a token.
+
 ### Fixed
 - `Siret::isValid()` accepts La Poste's head office, `35600000000048`: a La Poste SIRET is valid
   when it passes the Luhn check or, La Poste's own rule, when its digits sum to a multiple of 5.

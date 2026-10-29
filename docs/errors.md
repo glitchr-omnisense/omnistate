@@ -16,6 +16,12 @@ Three exceptions, in `Omnistate\Exception`:
 `UnavailableException::__construct(string $message, ?int $retryAfter = null, ?\Throwable
 $previous = null)`: the HTTP client's exception, when there was one, is the previous exception.
 
+A register that calls with a key or a token (NARA's `x-api-key`, matchID's bearer, Annuaire Santé's
+`ESANTE-API-KEY`) keeps it out of what it throws: the HTTP client's message with it masked
+(`Http\Redaction::text()`), the previous exception a copy of the client's (`Redaction::copy()`: the
+same class and code), and no trace of the chain keeping its arguments, where the request's headers
+stood (`zend.exception_ignore_args` off).
+
 ## The family's rule
 
 Not knowing is an answer; not answering is not. No register reads one as the other:
