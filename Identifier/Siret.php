@@ -4,9 +4,10 @@ namespace Omnistate\Identifier;
 
 /**
  * A French establishment's SIRET: its company's SIREN and a five-digit NIC,
- * fourteen digits under a Luhn check - except La Poste's (SIREN 356 000 000),
- * whose many establishments are checked by the sum of their digits, a
- * multiple of 5.
+ * fourteen digits under a Luhn check - La Poste's (SIREN 356 000 000) also
+ * when the sum of their digits is a multiple of 5, the rule its many
+ * establishments' numbers follow (its head office, 356 000 000 00048, passes
+ * Luhn and not the sum).
  */
 final class Siret
 {
@@ -26,11 +27,11 @@ final class Siret
         if (null === $siret || !Siren::isValid(substr($siret, 0, 9))) {
             return false;
         }
-        if (self::LA_POSTE === substr($siret, 0, 9) && '00012' !== substr($siret, 9)) {
-            return 0 === array_sum(str_split($siret)) % 5;
+        if (Luhn::isValid($siret)) {
+            return true;
         }
 
-        return Luhn::isValid($siret);
+        return self::LA_POSTE === substr($siret, 0, 9) && 0 === array_sum(array_map('intval', str_split($siret))) % 5;
     }
 
     public static function siren(string $siret): string
