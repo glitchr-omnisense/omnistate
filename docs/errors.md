@@ -58,7 +58,7 @@ answer, try again" on `UnavailableException`. A VAT check that cannot be made is
 | `vies` | `Retry-After` (at least 1), else 60 s | VIES's `MS_UNAVAILABLE` (600 s), `TIMEOUT`, `SERVICE_UNAVAILABLE`, `MS_MAX_CONCURRENT_REQ`, `GLOBAL_MAX_CONCURRENT_REQ` (and their `_TIME` variants), `SERVER_BUSY`, `IP_BLOCKED`, any other error code but `VALID`, `INVALID` and the three refusals below; an answer without `valid`; no answer; not JSON |
 | `iana` (`Bootstrap`) | `Retry-After` (at least 1), else 60 s | any HTTP error on a bootstrap file, no answer, not JSON |
 | `iana` (`Rdap`) | `Retry-After` (seconds or a date, at least 1), else 60 s | 401, 403, 5xx, no answer, not JSON |
-| `annuaire-sante` | `Retry-After`, else 1 s | no key (before any request), 401, 403, 5xx, another 4xx but 404, no answer, not JSON |
+| `annuaire-sante` | `Retry-After` (seconds or a date, at least 1), else 1 s | no key (before any request), 401, 403, 5xx, another 4xx but 404, no answer, not JSON |
 | `matchid` | `Retry-After`, else 60 s | 401, 403, 5xx, no answer, not JSON |
 | `openarchieven` | `Retry-After` (at least 1), else 1 s | 401, 403, 5xx, no answer, not JSON |
 | `national-archives-uk` | `Retry-After` (at least 1), else 60 s | 401, 403, 5xx, no answer, not JSON |
@@ -105,6 +105,5 @@ if (null === $company) {
 Catching `OmnistateException` catches all three. A cache never keeps an exception: the next call
 asks again.
 
-One register departs from the rule in a case the conformance suite does not reach; it is listed
-in [Verified, and not](verified.md#defects-found-in-the-code): `AnnuaireSante` reads a
-`Retry-After` written as a date as 0 s.
+Every register follows the rule, the cases the conformance suite does not reach included
+([Verified, and not](verified.md#defects-found-in-the-code)).

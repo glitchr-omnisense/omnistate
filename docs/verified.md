@@ -48,15 +48,7 @@ The registers' manuals state their own earlier live runs (matchID, Open Archives
 
 ## Defects found in the code
 
-Listed for the code to be fixed; this manual documents what the code does.
-
-- `omnistate/annuaire-sante`, `AnnuaireSante.php:515` - a `Retry-After` written as an HTTP date is
-  cast to `0`: `retryAfter` is then 0, where the suite asks for a positive number (it only tests a
-  number of seconds).
-- `omnistate/annuaire-entreprises`, `AnnuaireEntreprises.php:76` - `company()` compares the
-  result's SIREN with the identifier's first nine characters as given, while `supports()` ignores
-  spaces, dots and dashes: called directly, `company('356 000 000')` is supported and answers
-  `null`. Through the facade, which normalizes first, the company is found.
+None left: those the manuals found were fixed on 2026-10-29.
 
 In the documentation, corrected here: `docs/civil.md` said there was no NARA package "until a key
 is at hand to verify one", while `omnistate/nara` exists and the bundle registers it.
