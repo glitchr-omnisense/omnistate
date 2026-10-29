@@ -100,12 +100,8 @@ The Symfony bundle gives `Bootstrap` the same cache pool as the facade.
 
 - IANA's bootstrap not answering, an HTTP error on it, an answer that is not JSON:
   `UnavailableException` (`retryAfter` from a 429's `Retry-After`, else 60 s).
-- An RDAP server answering HTTP 429 or 5xx, or not answering: `UnavailableException`.
+- An RDAP server answering HTTP 401, 403, 429 (`retryAfter` from its `Retry-After`, seconds or a
+  date, else 60 s) or 5xx, or not answering: `UnavailableException`; its 404 or 410: `null`, not
+  registered; its 400 or another 4xx: an `OmnistateException` with the server's reason.
 - No Internet registry installed: `NotSupportedException` (`No Internet registry installed: add
   omnistate/iana.`).
-
-> [!WARNING]
-> An RDAP server's HTTP 401, 403 or another 4xx than 404 is read as `null`, "not registered", and
-> a 429 without `Retry-After` from an RDAP server has no `retryAfter`: both contradict the family's
-> rule ([Errors](errors.md#the-familys-rule)); the conformance suite does not see it because its
-> failures hit the bootstrap first. Listed in [Verified, and not](verified.md).

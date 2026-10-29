@@ -76,20 +76,19 @@ $check->checkedAt;            // VIES's date of the check
 The requester is normalized like the number. A requester that has no member state's shape becomes
 `null` and is not sent: the check is made, without a consultation number.
 
-> [!NOTE]
-> An error code from VIES that `omnistate/vies` does not list among the unavailable ones below -
-> `INVALID_INPUT`, or `INVALID_REQUESTER_INFO` for a requester VIES refuses - is read as
-> `valid: false` (unless the same answer says `valid: true`): a refused requester can make a
-> valid number read as not valid. Check your own number once, alone, before setting it as the
-> requester. Listed in [Verified, and not](verified.md).
+A check VIES refuses - `INVALID_INPUT`, `INVALID_REQUESTER_INFO` for a requester it does not
+accept, `VAT_BLOCKED` - is an `OmnistateException` naming the code, never `valid: false`: asking
+again gives the same answer, so fix the requester (or check without one).
 
 ## Unavailable is not invalid
 
 VIES only relays: each member state's service has its hours, and VIES limits concurrent calls.
 `omnistate/vies` reads these answers as `UnavailableException`, never as a number that does not
 exist: `MS_UNAVAILABLE` (`retryAfter` 600 s), `TIMEOUT`, `SERVICE_UNAVAILABLE`,
-`MS_MAX_CONCURRENT_REQ`, `GLOBAL_MAX_CONCURRENT_REQ`, `SERVER_BUSY`, `IP_BLOCKED`, an HTTP 429
-(its `Retry-After`, else 60 s), an answer that is not JSON, and no answer at all.
+`MS_MAX_CONCURRENT_REQ`, `GLOBAL_MAX_CONCURRENT_REQ` and their `_TIME` variants, `SERVER_BUSY`,
+`IP_BLOCKED`, any error code but the three refusals above and VIES's verdicts `VALID` and
+`INVALID`, an HTTP 429 (its `Retry-After`, else 60 s), an answer that is not JSON, and no answer
+at all.
 
 ```php
 try {
