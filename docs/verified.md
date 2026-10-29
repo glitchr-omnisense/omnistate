@@ -55,18 +55,9 @@ Listed for the code to be fixed; this manual documents what the code does.
   check and fails the sum rule: `Siret::isValid('35600000000048')` is `false`, so
   `AnnuaireEntreprises::supports()` refuses it and `$omnistate->company('35600000000048')` is a
   `NotSupportedException` (observed on 2026-10-25). The `#[Siret]` constraint refuses it too.
-- `omnistate/iana`, `Rdap.php:110-117` - an RDAP server's HTTP 401, 403 or any 4xx but 404 and
-  429 is read as `null` (not registered), and a 429 without `Retry-After` gives no `retryAfter`;
-  the family's rule (`Exception/UnavailableException.php`, [Errors](errors.md#the-familys-rule))
-  says both are an `UnavailableException`, the 429 with a `retryAfter`. The conformance suite does
-  not catch it: its failures reach IANA's bootstrap first, which does follow the rule.
 - `omnistate/annuaire-sante`, `AnnuaireSante.php:515` - a `Retry-After` written as an HTTP date is
   cast to `0`: `retryAfter` is then 0, where the suite asks for a positive number (it only tests a
   number of seconds).
-- `omnistate/vies`, `Vies.php:63-73` - only seven VIES error codes are read as unavailable; any
-  other (`INVALID_INPUT`, `INVALID_REQUESTER_INFO`...) gives a `VatCheck` with `valid` false
-  unless the answer says otherwise, so a requester VIES refuses can make a valid number read as
-  not valid.
 - `omnistate/annuaire-entreprises`, `AnnuaireEntreprises.php:76` - `company()` compares the
   result's SIREN with the identifier's first nine characters as given, while `supports()` ignores
   spaces, dots and dashes: called directly, `company('356 000 000')` is supported and answers

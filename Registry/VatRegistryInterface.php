@@ -17,6 +17,7 @@ interface VatRegistryInterface
      *                               give a consultation number, the proof of the check
      *
      * @throws \Omnistate\Exception\UnavailableException the register (or the member state behind it) did not answer
+     * @throws \Omnistate\Exception\OmnistateException    the register refused the check itself (VIES: a requester it does not accept)
      */
     public function check(string $number, ?string $requester = null): VatCheck;
 }
