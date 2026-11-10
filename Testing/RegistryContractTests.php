@@ -4,6 +4,8 @@ namespace Omnistate\Testing;
 
 use Omnistate\Exception\NotSupportedException;
 use Omnistate\Exception\UnavailableException;
+use Omnistate\Exception\UsageLimitReachedException;
+use Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface;
 use Omnistate\Model\CivilQuery;
 use Omnistate\Model\CivilRecord;
 use Omnistate\Model\Company;
@@ -50,7 +52,11 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * - HTTP 404 on a lookup (a company, a professional, a facility, a record, a domain, a network)
  *   is null: not known;
  * - on the recorded answers: each lookup and search gives models carrying the registry's name as
- *   $source and their identifier, a civil record of a kind the register says it holds.
+ *   $source and their identifier, a civil record of a kind the register says it holds;
+ * - its usage policy (DeclaresUsagePolicyInterface, the package's policy.json) reads and carries
+ *   its name; through the facade, a site's tighter limit refuses the call over it without a
+ *   request, and a 429 holds the next call (UsageLimitReachedException, an UnavailableException
+ *   with $retryAfter) without a request either.
  *
  * No test reaches the network: every request goes to the suite's MockHttpClient, and one with no
  * recorded answer is answered HTTP 404 and named in the failure.
@@ -251,14 +257,15 @@ trait RegistryContractTests
     public function testTheRecordedAnswersGiveModelsOfItsOwn(): void
     {
         $registry = $this->registry($this->contractHttp());
-        $omnistate = $this->omnistate($registry);
+        // Each question from an application of its own: a register's policy may allow one call a
+        // second (national-archives-uk), and these are not questions about limits.
         $name = $registry->name();
 
         if ($registry instanceof CompanyRegistryInterface) {
-            $company = $this->answered(fn () => $omnistate->company($this->companyIdentifier()), 'company()');
+            $company = $this->answered(fn () => $this->omnistate($registry)->company($this->companyIdentifier()), 'company()');
             self::assertNotNull($company, 'company(): the recorded answers know companyIdentifier()');
             $this->assertCompany($company, $name);
-            $found = $this->answered(fn () => $omnistate->search($this->searchQuery(), 5), 'search()');
+            $found = $this->answered(fn () => $this->omnistate($registry)->search($this->searchQuery(), 5), 'search()');
             self::assertNotSame([], $found, 'search(): the recorded answers find searchQuery()');
             self::assertLessThanOrEqual(5, \count($found));
             foreach ($found as $one) {
@@ -266,20 +273,20 @@ trait RegistryContractTests
             }
         }
         if ($registry instanceof VatRegistryInterface) {
-            $check = $this->answered(fn () => $omnistate->vat($this->vatNumber()), 'vat()');
+            $check = $this->answered(fn () => $this->omnistate($registry)->vat($this->vatNumber()), 'vat()');
             self::assertSame($name, $check->source);
             self::assertMatchesRegularExpression('/^[A-Z]{2}[0-9A-Z+*]+$/', $check->number, 'vat(): the number, normalized');
         }
         if ($registry instanceof ProfessionalRegistryInterface) {
-            $professional = $this->answered(fn () => $omnistate->professional($this->professionalIdentifier()), 'professional()');
+            $professional = $this->answered(fn () => $this->omnistate($registry)->professional($this->professionalIdentifier()), 'professional()');
             self::assertNotNull($professional, 'professional(): the recorded answers know professionalIdentifier()');
             $this->assertProfessional($professional, $name);
-            foreach ($this->answered(fn () => $omnistate->professionals($this->searchQuery()), 'professionals()') as $one) {
+            foreach ($this->answered(fn () => $this->omnistate($registry)->professionals($this->searchQuery()), 'professionals()') as $one) {
                 $this->assertProfessional($one, $name);
             }
         }
         if ($registry instanceof FacilityRegistryInterface) {
-            $facility = $this->answered(fn () => $omnistate->facility($this->facilityIdentifier()), 'facility()');
+            $facility = $this->answered(fn () => $this->omnistate($registry)->facility($this->facilityIdentifier()), 'facility()');
             self::assertNotNull($facility, 'facility(): the recorded answers know facilityIdentifier()');
             self::assertSame($name, $facility->source);
             self::assertNotSame('', $facility->identifier);
@@ -289,27 +296,86 @@ trait RegistryContractTests
             $query = $this->civilQuery();
             self::assertNotNull($query, 'a civil register: civilQuery() gives a question it takes');
             self::assertTrue($registry->supports($query));
-            $records = $this->answered(fn () => $omnistate->civilRecords($query, $name), 'civilRecords()');
+            $records = $this->answered(fn () => $this->omnistate($registry)->civilRecords($query, $name), 'civilRecords()');
             self::assertNotSame([], $records, 'civilRecords(): the recorded answers find civilQuery()');
             foreach ($records as $record) {
                 $this->assertCivilRecord($record, $registry);
             }
             $identifier = $this->civilIdentifier();
             self::assertNotNull($identifier, 'a civil register: civilIdentifier() names a record');
-            $record = $this->answered(fn () => $omnistate->civilRecord($name, $identifier), 'civilRecord()');
+            $record = $this->answered(fn () => $this->omnistate($registry)->civilRecord($name, $identifier), 'civilRecord()');
             self::assertNotNull($record, 'civilRecord(): the recorded answers know civilIdentifier()');
             $this->assertCivilRecord($record, $registry);
             self::assertSame($identifier, $record->identifier, 'found by the identifier it carries');
         }
         if ($registry instanceof InternetRegistryInterface) {
-            $domain = $this->answered(fn () => $omnistate->domain($this->domainName()), 'domain()');
+            $domain = $this->answered(fn () => $this->omnistate($registry)->domain($this->domainName()), 'domain()');
             self::assertNotNull($domain, 'domain(): the recorded answers know domainName()');
             self::assertSame($name, $domain->source);
             self::assertSame(strtolower($this->domainName()), $domain->name);
-            $network = $this->answered(fn () => $omnistate->network($this->networkAddress()), 'network()');
+            $network = $this->answered(fn () => $this->omnistate($registry)->network($this->networkAddress()), 'network()');
             self::assertNotNull($network, 'network(): the recorded answers know networkAddress()');
             self::assertSame($name, $network->source);
             self::assertNotSame('', $network->handle);
+        }
+    }
+
+    public function testItsUsagePolicyIsDeclaredAndHonoured(): void
+    {
+        $registry = $this->registry($this->contractHttp());
+        if ($registry instanceof DeclaresUsagePolicyInterface) {
+            $policy = $registry->usagePolicy();
+            self::assertSame($registry->name(), $policy->provider, 'policy.json names the register as name() does');
+            self::assertNotNull($policy->provenance->terms, 'policy.json links to the terms it was read from');
+        }
+
+        // A site's limit: one call a minute for every operation - the second call is never made.
+        $requests = 0;
+        $counting = new MockHttpClient(function (string $method, string $url, array $options) use (&$requests): MockResponse {
+            ++$requests;
+
+            return new MockResponse('{}', ['http_code' => 404]);
+        });
+        $registry = $this->registry($counting);
+        $omnistate = $this->omnistate($registry, ['rateLimits' => [['max' => 1, 'window' => 'minute', 'operations' => []]]]);
+        $ask = array_values($this->questions($registry, $omnistate))[0] ?? null;
+        self::assertNotNull($ask, 'the register answers at least one question');
+        try {
+            $ask();
+        } catch (\Throwable) {
+            // The first answer, whatever it is: this test is about the second.
+        }
+        $made = $requests;
+        try {
+            $ask();
+            self::fail('A call over the site\'s limit was made.');
+        } catch (UsageLimitReachedException $e) {
+            self::assertGreaterThan(0, $e->retryAfter);
+            self::assertSame($made, $requests, 'refused before any HTTP request');
+        }
+
+        // A 429: the next call waits for its Retry-After, without asking.
+        $requests = 0;
+        $registry = $this->registry(new MockHttpClient(function () use (&$requests): MockResponse {
+            ++$requests;
+
+            return new MockResponse('{"message":"Too many requests"}', ['http_code' => 429, 'response_headers' => ['retry-after' => '30']]);
+        }));
+        $omnistate = $this->omnistate($registry);
+        $ask = array_values($this->questions($registry, $omnistate))[0];
+        try {
+            $ask();
+            self::fail('A 429 was an answer.');
+        } catch (UnavailableException $e) {
+            self::assertNotInstanceOf(UsageLimitReachedException::class, $e, 'the first 429 is the register\'s');
+        }
+        $made = $requests;
+        try {
+            $ask();
+            self::fail('The call after a 429 was made.');
+        } catch (UsageLimitReachedException $e) {
+            self::assertGreaterThan(0, $e->retryAfter);
+            self::assertSame($made, $requests, 'held without a request');
         }
     }
 
@@ -349,9 +415,11 @@ trait RegistryContractTests
         return $questions;
     }
 
-    private function omnistate(object $registry): Omnistate
+    /** @param array<string, mixed> $policy the site's tightening of the register's policy */
+    private function omnistate(object $registry, array $policy = []): Omnistate
     {
         return new Omnistate(
+            policies: [] === $policy || !method_exists($registry, 'name') ? [] : [(string) $registry->name() => $policy],
             companies: $registry instanceof CompanyRegistryInterface ? [$registry] : [],
             vat: $registry instanceof VatRegistryInterface ? [$registry] : [],
             internet: $registry instanceof InternetRegistryInterface ? $registry : null,

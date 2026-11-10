@@ -22,6 +22,9 @@ as constructor arguments. In Symfony, the bundle's tree sets them ([Symfony](sym
 | `requester` | `?string` | `null` | your own VAT number, sent with every check that names no other: VIES then answers a consultation number |
 | `professionals` | `iterable<ProfessionalRegistryInterface>` | `[]` | the professional registers; those implementing `FacilityRegistryInterface` answer `facility()` too |
 | `civil` | `iterable<CivilRegistryInterface>` | `[]` | the civil registers, asked in this order |
+| `policies` | `array<string, array>` | `[]` | by register name, the site's tightening of its usage policy (`rateLimits`, `rights`, `requirements`): never looser ([policies](policies.md)) |
+| `usage` | `array` | `[]` | what the site is (`commercial`, `open_source`, `contract`): a use a register's terms forbid fails at once |
+| `limiter` | `?Omnisense\Contracts\Policy\RateLimiterInterface` | `null` | where calls are counted; in memory when null, a shared one for several processes |
 
 The iterables are read once, when the facade is built (a generator is consumed then).
 

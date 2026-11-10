@@ -5,16 +5,23 @@ order: 50
 
 # Errors
 
-Three exceptions, in `Omnistate\Exception`:
+Four exceptions, in `Omnistate\Exception`; each is an `Omnisense\Contracts\Exception\ExceptionInterface` too:
 
 | Exception | Parent | Means |
 |---|---|---|
 | `OmnistateException` | `\RuntimeException` | the family's base class; thrown as such when a register refused the question itself |
 | `NotSupportedException` | `OmnistateException` | no register installed takes that question: add its package |
-| `UnavailableException` | `OmnistateException` | the register did not answer; `public readonly ?int $retryAfter`, in seconds, when there is an estimate |
+| `UnavailableException` | `OmnistateException` | the register did not answer; `public readonly ?int $retryAfter`, in seconds, when there is an estimate; `?int $status`, the HTTP status it answered (`isTooManyCalls()`: 429) |
+| `UsageLimitReachedException` | `UnavailableException` | the call was not made: a limit of the register's usage policy is reached, or its 429 is not over ([policies](policies.md)); `$provider`, `$limit` |
 
 `UnavailableException::__construct(string $message, ?int $retryAfter = null, ?\Throwable
-$previous = null)`: the HTTP client's exception, when there was one, is the previous exception.
+$previous = null, ?int $status = null)`: the HTTP client's exception, when there was one, is the
+previous exception; a register gives `$status` 429 on a 429, and the facade then holds every call to
+it for `$retryAfter` seconds.
+
+A site whose use a register's terms forbid (`usage: ['commercial' => true]` on a non-commercial
+register) gets omnisense/contracts' `UsageNotPermitted` (an `InvalidConfigException`) at the first
+call: a configuration error, not an answer.
 
 A register that calls with a key or a token (NARA's `x-api-key`, matchID's bearer, Annuaire Santé's
 `ESANTE-API-KEY`) keeps it out of what it throws: the HTTP client's message with it masked
@@ -32,7 +39,8 @@ Not knowing is an answer; not answering is not. No register reads one as the oth
 | a VAT number that does not exist | a `VatCheck` with `valid` false |
 | the identifier or the question is not one for any register installed | `NotSupportedException`, from the facade, before any request |
 | HTTP 401 or 403 (a key missing or refused) | `UnavailableException` |
-| HTTP 429 | `UnavailableException` with `retryAfter` |
+| HTTP 429 | `UnavailableException` with `retryAfter`; the next calls to that register a `UsageLimitReachedException` until it is over |
+| a limit of the register's usage policy reached | `UsageLimitReachedException` (an `UnavailableException`), before any request |
 | HTTP 5xx, no answer (DNS, connection, timeout), an answer that cannot be read (an HTML page in place of JSON) | `UnavailableException` |
 | a question the service refuses as malformed | as each register documents: `[]`, `null`, or an `OmnistateException` with the service's reason |
 

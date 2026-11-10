@@ -19,8 +19,9 @@ $omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year
 
 This package holds the contract, the models (`Company`, `Establishment`, `Manager`, `FinancialYear`,
 `VatCheck`, `Domain`, `Network`...), the identifier rules - checked without asking anyone - and a
-bridge for Symfony. It needs no framework: it requires nothing but `symfony/http-client-contracts`,
-each source package `symfony/http-client`. Each source is a package of its own:
+bridge for Symfony. It needs no framework: it requires nothing but `symfony/http-client-contracts`
+and `omnisense/contracts` (the omni families' kernel: usage policies, requiring nothing more), each
+source package `symfony/http-client`. Each source is a package of its own:
 
 | Package | Source | Access |
 |---|---|---|
@@ -127,6 +128,7 @@ second). Put it behind your back office's access control, or give your subclass 
   [civil registers](docs/civil.md), [identifiers](docs/usage-identifiers.md)
 - [Configuration reference](docs/configuration.md)
 - [Errors](docs/errors.md)
+- [Usage policies](docs/policies.md): each register's limits, rights and credit, enforced
 - [Testing](docs/testing.md): fakes, recorded answers, the conformance suite
 - [The Docker harness](docs/harness.md)
 - [Writing a register, the errors' rule and the conformance suite](docs/providers.md)

@@ -23,7 +23,8 @@ The facade `Omnistate\Omnistate` holds the registers installed, asks the one tha
 question, and keeps the answers in a cache when one is given (registers change slowly, and some
 count their calls). Identifiers - SIREN, SIRET, EU VAT numbers, RPPS, FINESS, ISO country codes -
 are checked in `Omnistate\Identifier\` without asking anyone. The core needs no framework: it
-requires `symfony/http-client-contracts` and nothing else; each register requires
+requires `symfony/http-client-contracts` and `omnisense/contracts` (the omni families' kernel,
+itself requiring nothing else), and nothing more; each register requires
 `symfony/http-client`, a library that stands alone. A Symfony bundle is included for applications
 that want the wiring done, with validation constraints and a company search field
 ([Symfony](symfony.md)).
@@ -77,7 +78,9 @@ endpoints, options, mapping and limits.
   [civil registers](civil.md), [identifiers](usage-identifiers.md).
 - [Configuration reference](configuration.md): the facade's arguments, each register's
   constructor, the bundle's tree.
-- [Errors](errors.md): the three exceptions and the family's rule on them.
+- [Errors](errors.md): the four exceptions and the family's rule on them.
+- [Usage policies](policies.md): each register's limits, rights and credit, enforced around every
+  call; a site's own limits.
 - [Testing](testing.md): testing an application that uses Omnistate; the conformance suite.
 - [The Docker harness](harness.md): every register installed, a script that calls them.
 - [Writing a register](providers.md), and its conformance suite.

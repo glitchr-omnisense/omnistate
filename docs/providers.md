@@ -20,6 +20,24 @@ family's contracts:
 | `Registry\InternetRegistryInterface` | `domain($name)`, `network($address)` | `domain()`, `network()` |
 
 `name()` is a short name (`annuaire-entreprises`), the `$source` of every model it returns.
+
+It declares its usage policy: a `policy.json` beside its class (omnisense/contracts' schema: rate
+limits, rights, credit, licence, requirements, where they were read), named in `composer.json`
+(`"extra": {"omnisense": {"policy": "policy.json"}}`), given by the class through
+`Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface`:
+
+```php
+public function usagePolicy(): UsagePolicy
+{
+    return UsagePolicy::fromFile(__DIR__.'/policy.json');
+}
+```
+
+Write only what the service's own pages say, with `provenance.verifiedAt` the day they were read;
+what they do not say is `unknown` (`rateLimits: null`). The facade enforces it
+([policies](policies.md)); a 429 is thrown with `$status` 429 (`new UnavailableException($message,
+$retryAfter, null, 429)`) so that the next calls wait. `Omnistate\Http\JsonClient` makes the calls
+with the family's rule built in (`answer()`: null on 404, a 429 with its Retry-After).
 Identifier rules (SIREN, SIRET, VAT numbers, RPPS, FINESS) live in `Omnistate\Identifier\`: a
 register checks the form there and asks nothing about an identifier that is not one.
 
@@ -32,7 +50,7 @@ Not knowing is an answer; not answering is not. A register never reads one as th
 | it does not know the company, the professional, the record, the domain (HTTP 404, 410, an empty result) | `null` from a lookup, `[]` from a search |
 | the identifier or the question is not one for it | `supports()` says no; the facade throws `NotSupportedException` without asking |
 | HTTP 401 or 403 (a key missing or refused, a firewall) | `UnavailableException` |
-| HTTP 429 | `UnavailableException` with `$retryAfter` in seconds: the answer's `Retry-After` when it gives one, else the register's own estimate (NARA: until its monthly quota renews) |
+| HTTP 429 | `UnavailableException` with `$retryAfter` in seconds - the answer's `Retry-After` when it gives one, else the register's own estimate (NARA: until its monthly quota renews) - and `$status` 429 |
 | HTTP 5xx, no answer (DNS, connection, timeout), an answer that cannot be read (an HTML page in place of JSON) | `UnavailableException` |
 | a question the service refuses as malformed (HTTP 400) | `null`/`[]` or an `OmnistateException` with the service's reason, as the register documents |
 
@@ -88,9 +106,11 @@ What it checks, for each contract the register implements, asked through the `Om
 - HTTP 404 on every lookup is `null`;
 - on the recorded answers, every lookup and search gives models carrying the register's name as
   `$source`, their identifier and name; a civil record is of a kind the register holds, and
-  `find()` gives back the record a search named.
+  `find()` gives back the record a search named;
+- its `policy.json` reads and names it; a site's tighter limit refuses the call over it with no
+  request, and a 429 holds the next call with no request either (`UsageLimitReachedException`).
 
-Every hook, and what each of the five tests checks: [Testing](testing.md#the-conformance-suite).
+Every hook, and what each of the six tests checks: [Testing](testing.md#the-conformance-suite).
 
 Run it with the register's other tests: in the workspace (`~/Sites/omnistate`, path repositories
 and one `phpunit.xml.dist`), or through the Docker harness ([harness](harness.md)): add the

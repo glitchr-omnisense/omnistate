@@ -2,7 +2,12 @@
 
 namespace Omnistate;
 
+use Omnisense\Contracts\Policy\PolicyGuard;
+use Omnisense\Contracts\Policy\RateLimiterInterface;
+use Omnisense\Contracts\Policy\UsagePolicy;
+use Omnisense\Contracts\Policy\UsageNotPermitted;
 use Omnistate\Exception\NotSupportedException;
+use Omnistate\Exception\UnavailableException;
 use Omnistate\Identifier\Finess;
 use Omnistate\Identifier\Rpps;
 use Omnistate\Identifier\Siren;
@@ -17,6 +22,8 @@ use Omnistate\Model\Facility;
 use Omnistate\Model\Network;
 use Omnistate\Model\Professional;
 use Omnistate\Model\VatCheck;
+use Omnistate\Policy\GuardedCivilRegistry;
+use Omnistate\Policy\Guards;
 use Omnistate\Registry\CivilRegistryInterface;
 use Omnistate\Registry\CompanyRegistryInterface;
 use Omnistate\Registry\FacilityRegistryInterface;
@@ -31,6 +38,13 @@ use Symfony\Contracts\Cache\ItemInterface;
  * answers for it: a company by its identifier, a VAT number, a domain, a
  * network. Answers are kept $ttl seconds when a cache is given - registers
  * change slowly, and some count their calls.
+ *
+ * Every call to a register goes through its usage policy's guard (Policy\Guards):
+ * the policy it declares (its policy.json), tightened by the site's
+ * $policies, refused before it is made when a limit is reached or while the
+ * register's 429 lasts (UsageLimitReachedException, an UnavailableException);
+ * an answer kept in the cache is not a call. policies() lists them, with the
+ * credit each one asks for.
  *
  *     $omnistate->company('901821074')?->name;            // "GLITCH ART"
  *     $omnistate->vat('FR53901821074')->valid;             // true
@@ -49,12 +63,16 @@ final class Omnistate
     private array $professionals;
     /** @var list<CivilRegistryInterface> */
     private array $civil;
+    private readonly Guards $guards;
 
     /**
      * @param iterable<CompanyRegistryInterface> $companies
      * @param iterable<VatRegistryInterface>     $vat
      * @param iterable<ProfessionalRegistryInterface> $professionals registers of regulated professionals (and their facilities)
      * @param iterable<CivilRegistryInterface>        $civil         registers of acts and documents about people (births, marriages, deaths, archives)
+     * @param array<string, array<string, mixed>>     $policies      by register name: the site's tightening of its usage policy (rateLimits, rights, requirements), never looser
+     * @param array<string, mixed>                    $usage         what the site is (commercial, open_source, contract): a use a register's terms forbid fails at once
+     * @param RateLimiterInterface|null               $limiter       where the calls are counted; in memory when null, a shared one across processes
      */
     public function __construct(
         iterable $companies = [],
@@ -66,11 +84,15 @@ final class Omnistate
         private readonly ?string $requester = null,
         iterable $professionals = [],
         iterable $civil = [],
+        array $policies = [],
+        array $usage = [],
+        ?RateLimiterInterface $limiter = null,
     ) {
         $this->companies = [...$companies];
         $this->vat = [...$vat];
         $this->professionals = [...$professionals];
         $this->civil = [...$civil];
+        $this->guards = new Guards($policies, $usage, $limiter);
     }
 
     /**
@@ -78,24 +100,30 @@ final class Omnistate
      * its establishments), a French VAT number (its SIREN)...
      *
      * @throws NotSupportedException no registry installed knows that kind of identifier
+     * @throws UnavailableException  the register did not answer, or its usage policy holds the call (UsageLimitReachedException)
+     * @throws UsageNotPermitted     the register's terms do not allow the site's use
      */
     public function company(string $identifier): ?Company
     {
         $identifier = self::identifier($identifier);
         foreach ($this->companies as $registry) {
             if ($registry->supports($identifier)) {
-                return $this->remember('company.'.$registry->name().'.'.$identifier, fn () => $registry->company($identifier));
+                return $this->remember('company.'.$registry->name().'.'.$identifier, $registry, 'company', static fn () => $registry->company($identifier));
             }
         }
 
         throw new NotSupportedException(sprintf('No company registry installed knows "%s".', $identifier));
     }
 
-    /** @return list<Company> from every company registry installed, the first that finds any */
+    /**
+     * @return list<Company> from every company registry installed, the first that finds any
+     *
+     * @throws UnavailableException a register did not answer, or its usage policy holds the call
+     */
     public function search(string $query, int $limit = 10): array
     {
         foreach ($this->companies as $registry) {
-            if ($found = $this->remember('search.'.$registry->name().'.'.$limit.'.'.mb_strtolower(trim($query)), fn () => $registry->search($query, $limit))) {
+            if ($found = $this->remember('search.'.$registry->name().'.'.$limit.'.'.mb_strtolower(trim($query)), $registry, 'search', static fn () => $registry->search($query, $limit))) {
                 return $found;
             }
         }
@@ -110,6 +138,7 @@ final class Omnistate
      * @param string|null $requester your own VAT number, for a consultation number
      *
      * @throws NotSupportedException no VAT registry installed answers for its country
+     * @throws UnavailableException  the register did not answer, or its usage policy holds the call
      */
     public function vat(string $number, ?string $requester = null): VatCheck
     {
@@ -120,7 +149,7 @@ final class Omnistate
         $requester = VatNumber::normalize($requester ?? $this->requester);
         foreach ($this->vat as $registry) {
             if ($registry->supports($normalized)) {
-                return $this->remember('vat.'.$registry->name().'.'.$normalized.'.'.$requester, fn () => $registry->check($normalized, $requester));
+                return $this->remember('vat.'.$registry->name().'.'.$normalized.'.'.$requester, $registry, 'check', static fn () => $registry->check($normalized, $requester));
             }
         }
 
@@ -132,6 +161,7 @@ final class Omnistate
      * IDNPS form, "8" + RPPS)...
      *
      * @throws NotSupportedException no professional registry installed knows that kind of identifier
+     * @throws UnavailableException  the register did not answer, or its usage policy holds the call
      */
     public function professional(string $identifier): ?Professional
     {
@@ -139,7 +169,7 @@ final class Omnistate
         $identifier = Rpps::normalize($identifier) ?? $identifier;
         foreach ($this->professionals as $registry) {
             if ($registry->supports($identifier)) {
-                return $this->remember('professional.'.$registry->name().'.'.$identifier, fn () => $registry->professional($identifier));
+                return $this->remember('professional.'.$registry->name().'.'.$identifier, $registry, 'professional', static fn () => $registry->professional($identifier));
             }
         }
 
@@ -150,7 +180,7 @@ final class Omnistate
     public function professionals(string $name, ?string $postcode = null, int $limit = 10): array
     {
         foreach ($this->professionals as $registry) {
-            if ($found = $this->remember('professionals.'.$registry->name().'.'.$limit.'.'.$postcode.'.'.mb_strtolower(trim($name)), fn () => $registry->search($name, $postcode, $limit))) {
+            if ($found = $this->remember('professionals.'.$registry->name().'.'.$limit.'.'.$postcode.'.'.mb_strtolower(trim($name)), $registry, 'search', static fn () => $registry->search($name, $postcode, $limit))) {
                 return $found;
             }
         }
@@ -169,7 +199,7 @@ final class Omnistate
         $identifier = Finess::normalize($identifier) ?? strtoupper((string) preg_replace('/[\s.\-]/', '', $identifier));
         foreach ($this->professionals as $registry) {
             if ($registry instanceof FacilityRegistryInterface && $registry->supportsFacility($identifier)) {
-                return $this->remember('facility.'.$registry->name().'.'.$identifier, fn () => $registry->facility($identifier));
+                return $this->remember('facility.'.$registry->name().'.'.$identifier, $registry, 'facility', static fn () => $registry->facility($identifier));
             }
         }
 
@@ -178,7 +208,8 @@ final class Omnistate
 
     /**
      * The civil registers installed, those that hold records of that country
-     * (ISO 3166-1 alpha-2) and of that kind when given.
+     * (ISO 3166-1 alpha-2) and of that kind when given; each behind its
+     * usage policy's guard (search() and find() counted).
      *
      * @return list<CivilRegistryInterface>
      */
@@ -186,16 +217,16 @@ final class Omnistate
     {
         $country = null === $country ? null : strtoupper(trim($country));
 
-        return array_values(array_filter($this->civil, static fn (CivilRegistryInterface $registry) => (null === $country || \in_array($country, $registry->countries(), true))
-            && (null === $kind || \in_array($kind, $registry->kinds(), true))));
+        return array_values(array_map(fn (CivilRegistryInterface $registry): CivilRegistryInterface => new GuardedCivilRegistry($registry, $this->guards), array_filter($this->civil, static fn (CivilRegistryInterface $registry) => (null === $country || \in_array($country, $registry->countries(), true))
+            && (null === $kind || \in_array($kind, $registry->kinds(), true)))));
     }
 
-    /** The civil register of that name, null when it is not installed. */
+    /** The civil register of that name, behind its guard; null when it is not installed. */
     public function civilRegistry(string $name): ?CivilRegistryInterface
     {
         foreach ($this->civil as $registry) {
             if ($registry->name() === $name) {
-                return $registry;
+                return new GuardedCivilRegistry($registry, $this->guards);
             }
         }
 
@@ -240,7 +271,7 @@ final class Omnistate
                 continue;
             }
             $asked = true;
-            $found = $this->remember('civil.search.'.$candidate->name().'.'.$query->key(), static fn () => $candidate->search($query));
+            $found = $this->remember('civil.search.'.$candidate->name().'.'.$query->key(), $candidate, 'search', static fn () => $candidate->search($query));
             array_push($records, ...$found);
         }
         if (!$asked) {
@@ -259,16 +290,18 @@ final class Omnistate
      */
     public function civilRecord(string $registry, string $identifier): ?CivilRecord
     {
-        $found = $this->civilRegistry($registry) ?? throw new NotSupportedException(sprintf('The civil registry "%s" is not installed.', $registry));
+        $found = $this->registry($registry, $this->civil) ?? throw new NotSupportedException(sprintf('The civil registry "%s" is not installed.', $registry));
 
-        return $this->remember('civil.record.'.$registry.'.'.$identifier, static fn () => $found->find($identifier));
+        return $this->remember('civil.record.'.$registry.'.'.$identifier, $found, 'find', static fn () => $found->find($identifier));
     }
 
     public function domain(string $name): ?Domain
     {
         $name = rtrim(mb_strtolower(trim($name)), '.');
 
-        return $this->remember('domain.'.$name, fn () => $this->internet()->domain($name));
+        $internet = $this->internet();
+
+        return $this->remember('domain.'.$name, $internet, 'domain', static fn () => $internet->domain($name));
     }
 
     /** An IP address's range, or an AS number's. */
@@ -276,7 +309,49 @@ final class Omnistate
     {
         $address = strtoupper(trim($address));
 
-        return $this->remember('network.'.$address, fn () => $this->internet()->network($address));
+        $internet = $this->internet();
+
+        return $this->remember('network.'.$address, $internet, 'network', static fn () => $internet->network($address));
+    }
+
+    /**
+     * A register's usage policy as the site runs it: what it declares
+     * (limits, rights, the credit to show), tightened by the site's.
+     *
+     * @throws NotSupportedException no register of that name is installed
+     */
+    public function policy(string $name): UsagePolicy
+    {
+        return $this->guard($name)->policy();
+    }
+
+    /**
+     * Every installed register's policy, by name: what a site's "sources of
+     * the data we show" page lists (each policy's rights->attribution).
+     *
+     * @return array<string, UsagePolicy>
+     */
+    public function policies(): array
+    {
+        $policies = [];
+        foreach ($this->registries() as $name => $registry) {
+            $policies[$name] = $this->guards->guard($name, $registry)->policy();
+        }
+
+        return $policies;
+    }
+
+    /**
+     * A register's guard: its policy, the calls left (remaining()), the time
+     * to live its terms allow an answer (cacheTtl()).
+     *
+     * @throws NotSupportedException no register of that name is installed
+     */
+    public function guard(string $name): PolicyGuard
+    {
+        $registry = $this->registries()[$name] ?? throw new NotSupportedException(sprintf('No registry "%s" is installed.', $name));
+
+        return $this->guards->guard($name, $registry);
     }
 
     /** A French VAT number is looked up by its SIREN; spaces, dots and dashes go. */
@@ -290,28 +365,64 @@ final class Omnistate
         return Siret::normalize($clean) ?? Siren::normalize($clean) ?? $clean;
     }
 
+    /** @return array<string, object> every register installed, by name, the first of a name kept */
+    private function registries(): array
+    {
+        $registries = [];
+        foreach ([...$this->companies, ...$this->vat, ...$this->professionals, ...$this->civil, ...(null === $this->internet ? [] : [$this->internet])] as $registry) {
+            $registries[$registry->name()] ??= $registry;
+        }
+
+        return $registries;
+    }
+
+    /**
+     * @template T of CivilRegistryInterface
+     *
+     * @param list<T> $registries
+     *
+     * @return T|null
+     */
+    private function registry(string $name, array $registries): ?object
+    {
+        foreach ($registries as $registry) {
+            if ($registry->name() === $name) {
+                return $registry;
+            }
+        }
+
+        return null;
+    }
+
     private function internet(): InternetRegistryInterface
     {
         return $this->internet ?? throw new NotSupportedException('No Internet registry installed: add omnistate/iana.');
     }
 
     /**
+     * The answer kept, or the register asked under its guard - an answer
+     * kept is not a call. It is kept $ttl seconds, or less when the
+     * register's terms say so (0: not kept at all).
+     *
      * @template T
      *
      * @param callable(): T $ask
      *
      * @return T
      */
-    private function remember(string $key, callable $ask): mixed
+    private function remember(string $key, CompanyRegistryInterface|VatRegistryInterface|ProfessionalRegistryInterface|FacilityRegistryInterface|CivilRegistryInterface|InternetRegistryInterface $registry, string $operation, callable $ask): mixed
     {
-        if (null === $this->cache) {
-            return $ask();
+        $name = $registry->name();
+        $call = fn () => $this->guards->call($name, $registry, $operation, $ask);
+        $ttl = null === $this->cache ? 0 : ($this->guards->guard($name, $registry)->cacheTtl($this->ttl) ?? $this->ttl);
+        if (null === $this->cache || $ttl <= 0) {
+            return $call();
         }
 
-        return $this->cache->get('omnistate.'.hash('xxh128', $key), function (ItemInterface $item) use ($ask) {
-            $item->expiresAfter($this->ttl);
+        return $this->cache->get('omnistate.'.hash('xxh128', $key), static function (ItemInterface $item) use ($call, $ttl) {
+            $item->expiresAfter($ttl);
 
-            return $ask();
+            return $call();
         });
     }
 }

@@ -20,15 +20,17 @@ docker compose run --rm omnistate bare
 | `bare --recorded` | the same on the answers kept in `docker/harness/recorded/`, without a call |
 | `bare --json` | the same, whole: every class loaded, every file since the autoloader |
 | `test` | every package's tests (PHPUnit; arguments after `test` are passed on) |
+| `phpstan` | PHPStan at level max on each package with a `phpstan.neon` (its baseline holds what it had on 2026-11-10, and only shrinks) |
 | `composer ...`, `sh`, `php ...` | run as they are, in `/harness` |
 
 ## Settings
 
-`docker/.env` (copied from `docker/.env.dist`, git-ignored) holds two variables, both optional:
+`docker/.env` (copied from `docker/.env.dist`, git-ignored) holds three variables, all optional:
 
 | Variable | | 
 |---|---|
 | `OMNISTATE_PLUGINS` | where the sources' checkouts are, relative to `docker/` (`../..` when this core sits in the workspace beside them); unset, `docker/plugins` (empty) is mounted and every source comes from GitHub |
+| `OMNISENSE_CONTRACTS` | where omnisense/contracts' checkout is (`../../../omnisense-contracts`), to run the family on it and its tests with the family's; unset, its published branch 1.x comes from GitHub |
 | `OMNISTATE_REQUESTER` | your own VAT number, sent with `bare`'s VAT check: VIES then answers a consultation number |
 
 `bare` also reads `OMNISTATE_AUTOLOAD`, the autoloader to require in place of the harness's
@@ -95,7 +97,10 @@ tests, the same day: `OK (124 tests, 718 assertions)`.
 The files Composer requires together with the autoloader are not counted: they are loaded by
 `vendor/autoload.php` itself, whatever the script does.
 
-The image is `php:8.4-cli-alpine` with Composer and `intl`; the harness's packages live in the
-`harness` volume of the `omnistate-harness` project. The sources are cloned from GitHub as plain
+The image is `docker/Dockerfile`'s (`php:8.4-cli-alpine` with Composer and `intl`), or any image
+with PHP 8.4, `intl`, `zip`, git and Composer tagged `omnisense/omnistate-harness` (another family's
+harness): `compose.yml` names the entrypoint and Composer's settings, and runs on Docker's default
+bridge, with no network of its own. The harness's packages live in the `harness` volume of the
+`omnistate-harness` project; `/harness/packages/<slug>` links to each source's directory. The sources are cloned from GitHub as plain
 git repositories over HTTPS: no GitHub API (anonymous calls are rate limited), no ssh in the
 image.

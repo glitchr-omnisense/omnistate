@@ -14,7 +14,8 @@ composer require omnistate/annuaire-sante                                       
 ## Requirements
 
 - PHP 8.2 or later.
-- `omnisense/omnistate` requires `symfony/http-client-contracts` (^3.0) and nothing else.
+- `omnisense/omnistate` requires `symfony/http-client-contracts` (^3.0) and `omnisense/contracts`
+  (^1.0, the omni families' kernel and usage policies, which requires nothing more), and nothing else.
 - Each register requires `omnisense/omnistate` and `symfony/http-client` (^6.4, ^7.0 or ^8.0), a
   library that stands alone and loads no framework.
 - `omnistate/iana` suggests `ext-intl`: with it, an international domain name (`café.fr`) is
