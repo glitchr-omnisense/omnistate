@@ -7,6 +7,7 @@ use Omnisense\Contracts\Policy\RateLimiterInterface;
 use Omnisense\Contracts\Policy\UsagePolicy;
 use Omnisense\Contracts\Policy\UsageNotPermitted;
 use Omnistate\Exception\NotSupportedException;
+use Omnistate\Exception\OmnistateException;
 use Omnistate\Exception\UnavailableException;
 use Omnistate\Identifier\Finess;
 use Omnistate\Identifier\Rpps;
@@ -16,19 +17,25 @@ use Omnistate\Identifier\VatNumber;
 use Omnistate\Model\CivilQuery;
 use Omnistate\Model\CivilRecord;
 use Omnistate\Model\CivilRecordKind;
+use Omnistate\Model\Dataset;
 use Omnistate\Model\Company;
 use Omnistate\Model\Domain;
 use Omnistate\Model\Facility;
 use Omnistate\Model\Network;
+use Omnistate\Model\IndexChange;
 use Omnistate\Model\Professional;
+use Omnistate\Model\Series;
+use Omnistate\Model\TimePeriod;
 use Omnistate\Model\VatCheck;
 use Omnistate\Policy\GuardedCivilRegistry;
+use Omnistate\Policy\GuardedStatisticsRegistry;
 use Omnistate\Policy\Guards;
 use Omnistate\Registry\CivilRegistryInterface;
 use Omnistate\Registry\CompanyRegistryInterface;
 use Omnistate\Registry\FacilityRegistryInterface;
 use Omnistate\Registry\InternetRegistryInterface;
 use Omnistate\Registry\ProfessionalRegistryInterface;
+use Omnistate\Registry\StatisticsRegistryInterface;
 use Omnistate\Registry\VatRegistryInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -52,6 +59,7 @@ use Symfony\Contracts\Cache\ItemInterface;
  *     $omnistate->professional('10003461033')?->profession; // Médecin (an RPPS number)
  *     $omnistate->facility('670001234')?->name;            // a FINESS number
  *     $omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year(1932))); // acts and documents about a person
+ *     $omnistate->series('insee:IRL', last: 4)?->latest()?->value;   // the rent reference index's last quarter
  */
 final class Omnistate
 {
@@ -63,6 +71,8 @@ final class Omnistate
     private array $professionals;
     /** @var list<CivilRegistryInterface> */
     private array $civil;
+    /** @var list<StatisticsRegistryInterface> */
+    private array $statistics;
     private readonly Guards $guards;
 
     /**
@@ -73,6 +83,7 @@ final class Omnistate
      * @param array<string, array<string, mixed>>     $policies      by register name: the site's tightening of its usage policy (rateLimits, rights, requirements), never looser
      * @param array<string, mixed>                    $usage         what the site is (commercial, open_source, contract): a use a register's terms forbid fails at once
      * @param RateLimiterInterface|null               $limiter       where the calls are counted; in memory when null, a shared one across processes
+     * @param iterable<StatisticsRegistryInterface>   $statistics    sources of public statistics (INSEE, Eurostat, the ECB), asked in this order
      */
     public function __construct(
         iterable $companies = [],
@@ -87,11 +98,13 @@ final class Omnistate
         array $policies = [],
         array $usage = [],
         ?RateLimiterInterface $limiter = null,
+        iterable $statistics = [],
     ) {
         $this->companies = [...$companies];
         $this->vat = [...$vat];
         $this->professionals = [...$professionals];
         $this->civil = [...$civil];
+        $this->statistics = array_values([...$statistics]);
         $this->guards = new Guards($policies, $usage, $limiter);
     }
 
@@ -295,6 +308,83 @@ final class Omnistate
         return $this->remember('civil.record.'.$registry.'.'.$identifier, $found, 'find', static fn () => $found->find($identifier));
     }
 
+    /**
+     * A statistical series by its ref: "<source>:<id>" ("insee:IRL",
+     * "ecb:EXR/D.USD.EUR.SP00.A", "eurostat:prc_hicp_manr?geo=FR&coicop=CP00&unit=RCH_A&freq=M"),
+     * or an id alone, asked of the first source that reads it. Its
+     * observations from $from to $to (both included, either open), or its
+     * $last ones; with $history, every vintage of every value. Null when
+     * the source does not know it.
+     *
+     * @throws NotSupportedException no source installed reads that id (or keeps history, when asked)
+     * @throws UnavailableException  the source did not answer, or its usage policy holds the call
+     */
+    public function series(string $ref, ?TimePeriod $from = null, ?TimePeriod $to = null, ?int $last = null, bool $history = false): ?Series
+    {
+        [$registry, $id] = $this->statisticsFor($ref);
+
+        return $this->remember('series.'.$registry->name().'.'.$id.'.'.$from.'.'.$to.'.'.$last.'.'.(int) $history, $registry, 'series', static fn () => $registry->series($id, $from, $to, $last, $history));
+    }
+
+    /**
+     * How an index moved between two periods (an IRL a year apart): the
+     * series asked over them, then IndexChange::between().
+     *
+     * @throws NotSupportedException no source installed reads that id
+     * @throws OmnistateException     the series is unknown, or holds no value for one of the periods
+     * @throws UnavailableException   the source did not answer
+     */
+    public function indexChange(string $ref, TimePeriod $from, TimePeriod $to): IndexChange
+    {
+        [$first, $second] = $from->compare($to) <= 0 ? [$from, $to] : [$to, $from];
+        $series = $this->series($ref, $first, $second) ?? throw new OmnistateException(sprintf('No series "%s".', $ref));
+
+        return IndexChange::between($series, $from, $to);
+    }
+
+    /**
+     * Datasets whose title holds the query's words, from one source when
+     * named, else from every source installed, one after the other.
+     *
+     * @return list<Dataset>
+     *
+     * @throws NotSupportedException that source is not installed
+     * @throws UnavailableException  a source did not answer
+     */
+    public function datasets(string $query, ?string $source = null, int $limit = 10): array
+    {
+        $found = [];
+        foreach ($this->statistics as $registry) {
+            if (null !== $source && $registry->name() !== $source) {
+                continue;
+            }
+            array_push($found, ...$this->remember('datasets.'.$registry->name().'.'.$limit.'.'.mb_strtolower(trim($query)), $registry, 'datasets', static fn () => $registry->datasets($query, $limit)));
+        }
+        if (null !== $source && null === $this->registry($source, $this->statistics)) {
+            throw new NotSupportedException(sprintf('The statistics source "%s" is not installed.', $source));
+        }
+
+        return $found;
+    }
+
+    /**
+     * The statistics sources installed, each behind its usage policy's guard.
+     *
+     * @return list<StatisticsRegistryInterface>
+     */
+    public function statisticsRegistries(): array
+    {
+        return array_map(fn (StatisticsRegistryInterface $registry): StatisticsRegistryInterface => new GuardedStatisticsRegistry($registry, $this->guards), $this->statistics);
+    }
+
+    /** The statistics source of that name, behind its guard; null when it is not installed. */
+    public function statisticsRegistry(string $name): ?StatisticsRegistryInterface
+    {
+        $registry = $this->registry($name, $this->statistics);
+
+        return null === $registry ? null : new GuardedStatisticsRegistry($registry, $this->guards);
+    }
+
     public function domain(string $name): ?Domain
     {
         $name = rtrim(mb_strtolower(trim($name)), '.');
@@ -369,7 +459,7 @@ final class Omnistate
     private function registries(): array
     {
         $registries = [];
-        foreach ([...$this->companies, ...$this->vat, ...$this->professionals, ...$this->civil, ...(null === $this->internet ? [] : [$this->internet])] as $registry) {
+        foreach ([...$this->companies, ...$this->vat, ...$this->professionals, ...$this->civil, ...$this->statistics, ...(null === $this->internet ? [] : [$this->internet])] as $registry) {
             $registries[$registry->name()] ??= $registry;
         }
 
@@ -377,7 +467,7 @@ final class Omnistate
     }
 
     /**
-     * @template T of CivilRegistryInterface
+     * @template T of CivilRegistryInterface|StatisticsRegistryInterface
      *
      * @param list<T> $registries
      *
@@ -392,6 +482,26 @@ final class Omnistate
         }
 
         return null;
+    }
+
+    /**
+     * The source a ref names ("insee:IRL"), or the first that reads an id given alone.
+     *
+     * @return array{StatisticsRegistryInterface, string}
+     */
+    private function statisticsFor(string $ref): array
+    {
+        $ref = trim($ref);
+        if (1 === preg_match('/^([a-z0-9]+(?:-[a-z0-9]+)*):(.+)$/', $ref, $match) && null !== $registry = $this->registry($match[1], $this->statistics)) {
+            return $registry->supports($match[2]) ? [$registry, $match[2]] : throw new NotSupportedException(sprintf('The statistics source "%s" does not read "%s".', $match[1], $match[2]));
+        }
+        foreach ($this->statistics as $registry) {
+            if ($registry->supports($ref)) {
+                return [$registry, $ref];
+            }
+        }
+
+        throw new NotSupportedException(sprintf('No statistics source installed reads "%s".', $ref));
     }
 
     private function internet(): InternetRegistryInterface
@@ -410,7 +520,7 @@ final class Omnistate
      *
      * @return T
      */
-    private function remember(string $key, CompanyRegistryInterface|VatRegistryInterface|ProfessionalRegistryInterface|FacilityRegistryInterface|CivilRegistryInterface|InternetRegistryInterface $registry, string $operation, callable $ask): mixed
+    private function remember(string $key, CompanyRegistryInterface|VatRegistryInterface|ProfessionalRegistryInterface|FacilityRegistryInterface|CivilRegistryInterface|InternetRegistryInterface|StatisticsRegistryInterface $registry, string $operation, callable $ask): mixed
     {
         $name = $registry->name();
         $call = fn () => $this->guards->call($name, $registry, $operation, $ask);

@@ -16,6 +16,7 @@ use Omnistate\Registry\CompanyRegistryInterface;
 use Omnistate\Registry\FacilityRegistryInterface;
 use Omnistate\Registry\InternetRegistryInterface;
 use Omnistate\Registry\ProfessionalRegistryInterface;
+use Omnistate\Registry\StatisticsRegistryInterface;
 use Omnistate\Registry\VatRegistryInterface;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -27,7 +28,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * suite hands it) and the register's recorded answers. The suite checks each
  * of the family's contracts the registry implements (CompanyRegistryInterface,
  * VatRegistryInterface, ProfessionalRegistryInterface, FacilityRegistryInterface,
- * CivilRegistryInterface, InternetRegistryInterface), asked through the
+ * CivilRegistryInterface, InternetRegistryInterface, StatisticsRegistryInterface), asked through the
  * Omnistate facade as an application asks:
  *
  *   final class MatchIdContractTest extends TestCase
@@ -52,7 +53,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * - HTTP 404 on a lookup (a company, a professional, a facility, a record, a domain, a network)
  *   is null: not known;
  * - on the recorded answers: each lookup and search gives models carrying the registry's name as
- *   $source and their identifier, a civil record of a kind the register says it holds;
+ *   $source and their identifier, a civil record of a kind the register says it holds, a series
+ *   its observations oldest first and its credit, the catalogue datasets;
  * - its usage policy (DeclaresUsagePolicyInterface, the package's policy.json) reads and carries
  *   its name; through the facade, a site's tighter limit refuses the call over it without a
  *   request, and a 429 holds the next call (UsageLimitReachedException, an UnavailableException
@@ -134,10 +136,22 @@ trait RegistryContractTests
         return 'AS3333';
     }
 
+    /** A series the recorded answers know, as the source's series() takes it. */
+    protected function seriesIdentifier(): string
+    {
+        return 'IRL';
+    }
+
+    /** What datasets() is asked; the recorded catalogue finds something. */
+    protected function datasetQuery(): string
+    {
+        return 'prices';
+    }
+
     public function testItImplementsTheFamilysContractsUnderItsName(): void
     {
         $registry = $this->registry(new MockHttpClient());
-        $contracts = array_filter([CompanyRegistryInterface::class, VatRegistryInterface::class, ProfessionalRegistryInterface::class, FacilityRegistryInterface::class, CivilRegistryInterface::class, InternetRegistryInterface::class], static fn (string $contract) => $registry instanceof $contract);
+        $contracts = array_filter([CompanyRegistryInterface::class, VatRegistryInterface::class, ProfessionalRegistryInterface::class, FacilityRegistryInterface::class, CivilRegistryInterface::class, InternetRegistryInterface::class, StatisticsRegistryInterface::class], static fn (string $contract) => $registry instanceof $contract);
         self::assertNotSame([], $contracts, 'a register implements one of the family\'s contracts at least');
         self::assertMatchesRegularExpression('/^[a-z0-9]+(-[a-z0-9]+)*$/', $registry->name(), 'a short name, its models\' $source');
 
@@ -197,6 +211,10 @@ trait RegistryContractTests
         }
         if ($registry instanceof InternetRegistryInterface) {
             self::assertNull($registry->domain('not a domain'), 'not a domain name: null, not asked');
+        }
+        if ($registry instanceof StatisticsRegistryInterface) {
+            self::assertFalse($registry->supports('not a series id'));
+            $refuse(static fn () => $omnistate->series($registry->name().':not a series id'), 'series()');
         }
         self::assertSame([], $requests, 'refused before any HTTP request');
     }
@@ -308,6 +326,30 @@ trait RegistryContractTests
             $this->assertCivilRecord($record, $registry);
             self::assertSame($identifier, $record->identifier, 'found by the identifier it carries');
         }
+        if ($registry instanceof StatisticsRegistryInterface) {
+            $series = $this->answered(fn () => $this->omnistate($registry)->series($name.':'.$this->seriesIdentifier()), 'series()');
+            self::assertNotNull($series, 'series(): the recorded answers know seriesIdentifier()');
+            self::assertSame($name, $series->source);
+            self::assertNotSame('', $series->id);
+            self::assertNotSame('', $series->title);
+            self::assertNotSame('', $series->credit, 'the credit its reuse asks for');
+            self::assertNotSame([], $series->observations, 'series(): observations');
+            $previous = null;
+            foreach ($series->observations as $observation) {
+                if (null !== $series->frequency && \in_array($series->frequency->value, ['A', 'S', 'Q', 'M', 'W'], true)) {
+                    self::assertSame($series->frequency, $observation->period->frequency, 'each period of the series\' frequency');
+                }
+                self::assertTrue(null === $previous || $previous->period->compare($observation->period) <= 0, 'oldest first');
+                $previous = $observation;
+            }
+            $datasets = $this->answered(fn () => $this->omnistate($registry)->datasets($this->datasetQuery(), $name, 5), 'datasets()');
+            self::assertNotSame([], $datasets, 'datasets(): the recorded catalogue finds datasetQuery()');
+            self::assertLessThanOrEqual(5, \count($datasets));
+            foreach ($datasets as $dataset) {
+                self::assertSame($name, $dataset->source);
+                self::assertNotSame('', $dataset->id);
+            }
+        }
         if ($registry instanceof InternetRegistryInterface) {
             $domain = $this->answered(fn () => $this->omnistate($registry)->domain($this->domainName()), 'domain()');
             self::assertNotNull($domain, 'domain(): the recorded answers know domainName()');
@@ -407,6 +449,10 @@ trait RegistryContractTests
                 $questions['civilRecord(identifier)'] = fn () => $omnistate->civilRecord($registry->name(), $identifier);
             }
         }
+        if ($registry instanceof StatisticsRegistryInterface) {
+            $questions['series(identifier)'] = fn () => $omnistate->series($registry->name().':'.$this->seriesIdentifier());
+            $questions['datasets()'] = fn () => $omnistate->datasets($this->datasetQuery(), $registry->name());
+        }
         if ($registry instanceof InternetRegistryInterface) {
             $questions['domain(identifier)'] = fn () => $omnistate->domain($this->domainName());
             $questions['network(identifier)'] = fn () => $omnistate->network($this->networkAddress());
@@ -425,6 +471,7 @@ trait RegistryContractTests
             internet: $registry instanceof InternetRegistryInterface ? $registry : null,
             professionals: $registry instanceof ProfessionalRegistryInterface || $registry instanceof FacilityRegistryInterface ? [$registry] : [],
             civil: $registry instanceof CivilRegistryInterface ? [$registry] : [],
+            statistics: $registry instanceof StatisticsRegistryInterface ? [$registry] : [],
         );
     }
 

@@ -3,6 +3,21 @@
 ## Unreleased (1.x)
 
 ### Added
+- Statistics, the family's new capability (Marco, 2026-11-10: in omnistate, no new family):
+  `Registry\StatisticsRegistryInterface` (`supports()`, `series($id, $from, $to, $last, $history)`,
+  `datasets($query, $limit)`), the models `Series`, `Observation`, `TimePeriod` (year, half-year,
+  quarter, month, ISO week, day, as SDMX writes them), `Frequency`, `ObservationStatus`, `Dataset`
+  and `IndexChange` (two values of an index: `ratio()`, `percent()`, `apply()`); the facade's
+  `series($ref)` ("insee:IRL", or an id alone), `indexChange()`, `datasets()`,
+  `statisticsRegistries()`, `statisticsRegistry()` (`Policy\GuardedStatisticsRegistry`), its
+  `statistics:` argument (last), the bundle's `omnistate.statistics_registry` tag;
+  `Sdmx\Structures`, `Sdmx\ObservationFlags`, `Sdmx\Datasets`, what the sources share. The
+  first sources: omnistate/insee, omnistate/eurostat, omnistate/ecb. `RegistryContractTests`
+  checks a statistics source too (`seriesIdentifier()`, `datasetQuery()`). docs/statistics.md,
+  with a lease's revision by the IRL.
+- `Http\JsonClient::answer()` takes the error statuses to give back (`$pass`).
+- The harness installs a source not on GitHub yet from its checkout only (plugins.php's fourth
+  element), and `bare` asks the IRL.
 - On omnisense/contracts, the kernel of the omni families, with usage policies. Every call the
   facade makes to a register goes through its policy's guard (`Policy\Guards`): the policy it
   declares (`DeclaresUsagePolicyInterface`, its `policy.json`), tightened by the site's

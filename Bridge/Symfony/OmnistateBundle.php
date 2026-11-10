@@ -7,8 +7,11 @@ use Omnistate\AnnuaireSante\AnnuaireSante;
 use Omnistate\Bridge\Symfony\Controller\CompanySearchController;
 use Omnistate\Bridge\Symfony\Form\CompanySearchType;
 use Omnistate\Bridge\Symfony\Validator\VatNumberValidator;
+use Omnistate\Ecb\Ecb;
+use Omnistate\Eurostat\Eurostat;
 use Omnistate\Iana\Bootstrap;
 use Omnistate\Iana\Rdap;
+use Omnistate\Insee\Insee;
 use Omnistate\MatchId\MatchId;
 use Omnistate\Nara\Nara;
 use Omnistate\NationalArchivesUk\NationalArchivesUk;
@@ -18,6 +21,7 @@ use Omnistate\Registry\CivilRegistryInterface;
 use Omnistate\Registry\CompanyRegistryInterface;
 use Omnistate\Registry\InternetRegistryInterface;
 use Omnistate\Registry\ProfessionalRegistryInterface;
+use Omnistate\Registry\StatisticsRegistryInterface;
 use Omnistate\Registry\VatRegistryInterface;
 use Omnistate\Vies\Vies;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -55,6 +59,9 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  * Civil registers (omnistate/matchid, omnistate/openarchieven,
  * omnistate/national-archives-uk, omnistate/nara) are registered when
  * installed and tagged omnistate.civil_registry.
+ *
+ * Statistics sources (omnistate/insee, omnistate/eurostat, omnistate/ecb)
+ * are registered when installed and tagged omnistate.statistics_registry.
  *
  * An application's own registries (a CompanyRegistryInterface...) are asked
  * too, autoconfigured.
@@ -117,6 +124,7 @@ final class OmnistateBundle extends AbstractBundle
         $builder->registerForAutoconfiguration(VatRegistryInterface::class)->addTag('omnistate.vat_registry');
         $builder->registerForAutoconfiguration(ProfessionalRegistryInterface::class)->addTag('omnistate.professional_registry');
         $builder->registerForAutoconfiguration(CivilRegistryInterface::class)->addTag('omnistate.civil_registry');
+        $builder->registerForAutoconfiguration(StatisticsRegistryInterface::class)->addTag('omnistate.statistics_registry');
 
         $services = $container->services();
         $http = service('http_client');
@@ -144,6 +152,11 @@ final class OmnistateBundle extends AbstractBundle
         if (class_exists(Nara::class)) {
             $services->set(Nara::class)->args([$http, $config['nara']['api_key'], $config['timeout']])->tag('omnistate.civil_registry');
         }
+        foreach ([Insee::class, Eurostat::class, Ecb::class] as $statistics) {
+            if (class_exists($statistics)) {
+                $services->set($statistics)->args([$http])->arg('$timeout', $config['timeout'])->tag('omnistate.statistics_registry');
+            }
+        }
         $internet = null;
         if (class_exists(Rdap::class)) {
             $services->set(Bootstrap::class)->args([$http, null === $config['cache'] ? null : service($config['cache']), $config['timeout']]);
@@ -162,6 +175,10 @@ final class OmnistateBundle extends AbstractBundle
                 $config['requester'],
                 tagged_iterator('omnistate.professional_registry'),
                 tagged_iterator('omnistate.civil_registry'),
+                [],
+                [],
+                null,
+                tagged_iterator('omnistate.statistics_registry'),
             ])
             ->public();
 

@@ -25,6 +25,7 @@ as constructor arguments. In Symfony, the bundle's tree sets them ([Symfony](sym
 | `policies` | `array<string, array>` | `[]` | by register name, the site's tightening of its usage policy (`rateLimits`, `rights`, `requirements`): never looser ([policies](policies.md)) |
 | `usage` | `array` | `[]` | what the site is (`commercial`, `open_source`, `contract`): a use a register's terms forbid fails at once |
 | `limiter` | `?Omnisense\Contracts\Policy\RateLimiterInterface` | `null` | where calls are counted; in memory when null, a shared one for several processes |
+| `statistics` | `iterable<StatisticsRegistryInterface>` | `[]` | the statistics sources (`Insee\Insee`, `Eurostat\Eurostat`, `Ecb\Ecb`), asked in this order ([statistics](statistics.md)) |
 
 The iterables are read once, when the facade is built (a generator is consumed then).
 

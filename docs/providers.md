@@ -18,6 +18,7 @@ family's contracts:
 | `Registry\FacilityRegistryInterface` | `supportsFacility($identifier)`, `facility($identifier)` | `facility()` |
 | `Registry\CivilRegistryInterface` | `countries()`, `kinds()`, `period()`, `hasImages()`, `supports($query)`, `search($query)`, `find($identifier)` | `civilRecords()`, `civilRecord()` |
 | `Registry\InternetRegistryInterface` | `domain($name)`, `network($address)` | `domain()`, `network()` |
+| `Registry\StatisticsRegistryInterface` | `supports($id)`, `series($id, $from, $to, $last, $history)`, `datasets($query, $limit)` | `series()`, `indexChange()`, `datasets()` |
 
 `name()` is a short name (`annuaire-entreprises`), the `$source` of every model it returns.
 
@@ -90,7 +91,8 @@ answers by `"METHOD https://host/path"`, `"METHOD /path"` or `"*"` (a JSON body 
 `MockResponse`, or a callable). A request with no recorded answer is answered HTTP 404, and the
 failure names it. Hooks name what the recorded answers know: `companyIdentifier()`,
 `vatNumber()`, `searchQuery()`, `professionalIdentifier()`, `facilityIdentifier()`,
-`civilQuery()`, `civilIdentifier()`, `domainName()`, `networkAddress()`; `infrastructureAnswers()`
+`civilQuery()`, `civilIdentifier()`, `domainName()`, `networkAddress()`, `seriesIdentifier()`,
+`datasetQuery()`; `infrastructureAnswers()`
 keeps what a lookup needs before the record itself (IANA's bootstrap files) when the suite answers
 HTTP 404 to the rest.
 

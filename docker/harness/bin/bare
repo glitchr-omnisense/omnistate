@@ -5,22 +5,23 @@
  * Omnistate in bare PHP: no bundle, no container, no console component.
  * Omnistate\Omnistate is built by hand from the source packages installed,
  * says which registries it has, then is asked for a company by its SIREN
- * (Recherche d'entreprises), a VAT number (VIES) and a domain (IANA's RDAP
- * bootstrap, then the registry's server) - open services, no key - and the
- * script lists what PHP loaded on the way.
+ * (Recherche d'entreprises), a VAT number (VIES), a domain (IANA's RDAP
+ * bootstrap, then the registry's server) and the rent reference index (INSEE's
+ * BDM) - open services, no key - and the script lists what PHP loaded on the way.
  *
  *   docker compose run --rm omnistate bare              # exits 1 when a class of a framework was loaded
  *   docker compose run --rm omnistate bare --recorded   # the answers recorded on 2026-09-29 instead of the calls
  *   docker compose run --rm omnistate bare --json       # the same, whole: every class loaded, every file since the autoloader
  *
- * Four calls, one to each service: far under what they allow (Recherche
- * d'entreprises: about 7 a second). The registries that take a key or are
+ * Five calls, one to each service: far under what they allow (Recherche
+ * d'entreprises: about 7 a second; INSEE: 30 a minute). The registries that take a key or are
  * asked about people (annuaire-sante, the civil registers) are built and
  * named, not called. OMNISTATE_AUTOLOAD names another autoloader than the
  * harness's.
  */
 
 use Omnistate\Exception\UnavailableException;
+use Omnistate\Model\TimePeriod;
 use Omnistate\Omnistate;
 use Omnistate\Registry\CivilRegistryInterface;
 use Symfony\Component\HttpClient\HttpClient;
@@ -35,6 +36,7 @@ $autoloaded = get_included_files();
 const SIREN = '901821074';
 const VAT = 'FR53901821074';
 const DOMAIN = 'glitchr.dev';
+const IRL = 'insee:IRL';
 
 $recorded = \in_array('--recorded', $argv, true);
 $http = !$recorded ? HttpClient::create(['timeout' => 20]) : new MockHttpClient(static function (string $method, string $url): MockResponse {
@@ -43,6 +45,7 @@ $http = !$recorded ? HttpClient::create(['timeout' => 20]) : new MockHttpClient(
         str_starts_with($url, 'https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number') => 'vies-FR53901821074.json',
         'https://data.iana.org/rdap/dns.json' === $url => 'iana-dns.json',
         'https://pubapi.registry.google/rdap/domain/glitchr.dev' === $url => 'rdap-glitchr.dev.json',
+        str_starts_with($url, 'https://api.insee.fr/series/BDM/data/SERIES_BDM/001515333') => 'insee-irl.xml',
         default => null,
     };
 
@@ -50,7 +53,7 @@ $http = !$recorded ? HttpClient::create(['timeout' => 20]) : new MockHttpClient(
 });
 
 // Each registry is given the HTTP client to call with; what it is a registry of says where Omnistate takes it.
-$registries = ['companies' => [], 'vat' => [], 'internet' => [], 'professionals' => [], 'civil' => []];
+$registries = ['companies' => [], 'vat' => [], 'internet' => [], 'professionals' => [], 'civil' => [], 'statistics' => []];
 foreach (require __DIR__.'/../plugins.php' as $slug => [, $class, $kind]) {
     if (class_exists($class)) {
         $registries[$kind][$slug] = 'iana' === $slug ? new $class($http, new \Omnistate\Iana\Bootstrap($http)) : new $class($http);
@@ -63,10 +66,11 @@ $omnistate = new Omnistate(
     requester: getenv('OMNISTATE_REQUESTER') ?: null,
     professionals: array_values($registries['professionals']),
     civil: array_values($registries['civil']),
+    statistics: array_values($registries['statistics']),
 );
 
 $day = static fn (?DateTimeImmutable $date) => $date?->format('Y-m-d');
-$report = ['recorded' => $recorded, 'registries' => array_map('array_keys', $registries), 'civil' => [], 'company' => null, 'vat' => null, 'domain' => null, 'unavailable' => []];
+$report = ['recorded' => $recorded, 'registries' => array_map('array_keys', $registries), 'civil' => [], 'company' => null, 'vat' => null, 'domain' => null, 'irl' => null, 'unavailable' => []];
 foreach ($omnistate->civilRegistries() as $registry) {
     \assert($registry instanceof CivilRegistryInterface);
     $report['civil'][$registry->name()] = $registry->countries();
@@ -103,6 +107,22 @@ if ($registries['internet']) {
     $domain = $ask('domain', static fn () => $omnistate->domain(DOMAIN));
     $report['domain'] = null === $domain ? null : ['name' => $domain->name, 'registrar' => $domain->registrar?->name, 'registered' => $day($domain->registeredAt), 'expires' => $day($domain->expiresAt), 'nameservers' => $domain->nameservers, 'server' => $domain->server];
 }
+if (isset($registries['statistics']['insee'])) {
+    // The IRL's last quarters, and how it moved over the last published year.
+    $irl = $ask('irl', static fn () => $omnistate->series(IRL, TimePeriod::quarter(2024, 1)));
+    $latest = $irl?->latest();
+    $year = null === $latest || null === $irl ? null : $irl->observation($latest->period->shift(-4));
+    $report['irl'] = null === $latest || null === $irl ? null : [
+        'title' => $irl->title,
+        'latest' => (string) $latest->period,
+        'value' => $latest->value,
+        'published' => $day($latest->published),
+        'year_before' => $year?->value,
+        'ratio' => null === $year ? null : round(\Omnistate\Model\IndexChange::between($irl, $year->period, $latest->period)->ratio(), 6),
+        'credit' => $irl->credit,
+        'source' => $irl->source,
+    ];
+}
 
 // What PHP loaded to get there: the proof that no framework was needed.
 $report['symbols'] = [...get_declared_classes(), ...get_declared_interfaces(), ...get_declared_traits()];
@@ -133,8 +153,11 @@ if ($vat = $report['vat']) {
 if ($domain = $report['domain']) {
     printf("\nThe domain %s, %s:\n  registrar %s, registered on %s, expires on %s\n  name servers %s\n", DOMAIN, $recorded ? $from : $from.' '.$domain['server'].' (found through IANA\'s bootstrap)', $domain['registrar'], $domain['registered'], $domain['expires'], implode(', ', $domain['nameservers']));
 }
+if ($irl = $report['irl']) {
+    printf("\nThe rent reference index (%s), %s:\n  %s: %s, published on %s; a year before: %s (ratio %s)\n  %s\n", IRL, $recorded ? 'from the answer recorded on 2026-11-10' : $from.' INSEE\'s BDM', $irl['latest'], $irl['value'], $irl['published'], $irl['year_before'] ?? '-', $irl['ratio'] ?? '-', $irl['credit']);
+}
 foreach ($report['unavailable'] as $what => $message) {
-    printf("\nThe %s: the registry did not answer (%s) - that says nothing about it, ask again later.\n", ['company' => 'company '.SIREN, 'vat' => 'VAT number '.VAT, 'domain' => 'domain '.DOMAIN][$what], $message);
+    printf("\nThe %s: the registry did not answer (%s) - that says nothing about it, ask again later.\n", ['company' => 'company '.SIREN, 'vat' => 'VAT number '.VAT, 'domain' => 'domain '.DOMAIN, 'irl' => 'rent reference index'][$what], $message);
 }
 echo "\nLoaded from Symfony: ", implode(', ', $symfony) ?: 'nothing', "\n";
 echo 'Classes of a framework (DependencyInjection, Config, HttpKernel, HttpFoundation, Form, Routing, Validator, a bundle, a bridge, Doctrine, Twig): ', $framework ? implode(', ', $framework) : 'none', "\n";

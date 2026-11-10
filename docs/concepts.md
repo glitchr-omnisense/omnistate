@@ -49,7 +49,7 @@ made of the method, the register's name and the normalized question
 ([Configuration](configuration.md#the-cache)). `civilRegistries()`, `civilRegistry()` and
 `civilCountries()` ask no one and are not cached.
 
-## The six contracts
+## The seven contracts
 
 A register implements one or more interfaces of `Omnistate\Registry\`. Each has `name(): string`,
 a short name in kebab case (`annuaire-entreprises`) that is the `$source` of every model it
@@ -119,6 +119,17 @@ The Internet's registries.
 |---|---|
 | `domain(string $name): ?Domain` | a domain name's registration, `null` when no one registered it |
 | `network(string $address): ?Network` | an IP address's range, or an AS number's (`AS3215`, `3215`) |
+
+### StatisticsRegistryInterface
+
+A source of public statistics (INSEE's BDM, Eurostat, the ECB): its series, read as SDMX or a JSON
+form of it ([statistics](statistics.md)).
+
+| Method | |
+|---|---|
+| `supports(string $series): bool` | whether the id is one it reads (an idBank, `EXR/D.USD.EUR.SP00.A`...) |
+| `series(string $series, ?TimePeriod $from, ?TimePeriod $to, ?int $last, bool $history): ?Series` | its metadata and observations, oldest first; `null` when unknown |
+| `datasets(string $query, int $limit = 10): array` | `list<Dataset>` of its catalogue whose id or title holds every word |
 
 Every method that asks may throw `UnavailableException`; none returns `null` or `[]` for a
 register that did not answer ([the family's rule](errors.md#the-familys-rule)).

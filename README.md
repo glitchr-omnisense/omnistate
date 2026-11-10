@@ -15,6 +15,7 @@ $omnistate->network('193.0.6.139');        // or 'AS3333': who holds it
 $omnistate->professional('10003461033');   // a health professional by RPPS: profession, workplaces, MSSanté
 $omnistate->facility('580008803');         // a health facility by FINESS
 $omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year(1932)));  // acts and documents about a person
+$omnistate->series('insee:IRL', last: 4);  // public statistics: the rent reference index, INSEE, Eurostat, the ECB
 ```
 
 This package holds the contract, the models (`Company`, `Establishment`, `Manager`, `FinancialYear`,
@@ -122,6 +123,7 @@ second). Put it behind your back office's access control, or give your subclass 
 - [Installation and first calls](docs/installation.md): plain PHP first
 - [Symfony](docs/symfony.md) and [Laravel](docs/laravel.md)
 - [Concepts](docs/concepts.md): the facade, the contracts, every model
+- [Statistics](docs/statistics.md): INSEE, Eurostat, the ECB; the IRL and a lease's revision
 - Usage: [companies](docs/usage-companies.md), [VAT numbers](docs/usage-vat.md),
   [domains and networks](docs/usage-internet.md),
   [regulated professionals and facilities](docs/professionals.md),

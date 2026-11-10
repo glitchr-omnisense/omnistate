@@ -1,8 +1,8 @@
 {
     "name": "omnisense/omnistate",
     "type": "library",
-    "description": "Omnistate: one contract for what states and registries know - companies, VAT numbers, domains and networks (the Omnipay of public registers).",
-    "keywords": ["company", "registry", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc", "civil registry", "genealogy"],
+    "description": "Omnistate: one contract for what states and registries know - companies, VAT numbers, domains and networks, professionals, civil records, public statistics (the Omnipay of public registers), each register's usage policy enforced.",
+    "keywords": ["company", "registry", "statistics", "sdmx", "insee", "eurostat", "ecb", "irl", "siren", "siret", "vat", "vies", "rdap", "iana", "kyc", "civil registry", "genealogy"],
     "license": "MIT",
     "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
     "require": {
@@ -28,6 +28,7 @@
         "glitchr/omnistate": "self.version"
     },
     "suggest": {
+        "ext-simplexml": "Omnistate\\Sdmx\\Structures: the SDMX-ML messages of the statistics sources (omnistate/insee, omnistate/ecb)",
         "phpunit/phpunit": "In a register's tests: Omnistate\\Testing\\RegistryContractTests, the family's conformance suite (with symfony/http-client's MockHttpClient)",
         "symfony/cache-contracts": "Answers kept a while: registries change slowly, and some count their calls",
         "symfony/config": "In a Symfony application: the configuration of Omnistate\\Bridge\\Symfony\\OmnistateBundle",
@@ -44,7 +45,10 @@
         "omnistate/matchid": "French deaths since 1970 (INSEE's file), through matchID",
         "omnistate/openarchieven": "Births, marriages, deaths and more from the archives of the Netherlands and Belgium, with scans, through Open Archives",
         "omnistate/national-archives-uk": "The UK National Archives' Discovery catalogue: documents about a person, not civil registration",
-        "omnistate/nara": "The US National Archives Catalog: federal files about a person, with links to their scans, not civil registration (an API key)"
+        "omnistate/nara": "The US National Archives Catalog: federal files about a person, with links to their scans, not civil registration (an API key)",
+        "omnistate/insee": "French statistics from INSEE's BDM: the rent and lease indices (IRL, ICC, ILC, ILAT), consumer prices, every series by its idBank",
+        "omnistate/eurostat": "European statistics from Eurostat's dissemination API (JSON-stat), no key",
+        "omnistate/ecb": "The European Central Bank's statistics (SDMX): euro reference exchange rates, key interest rates, no key"
     },
     "autoload": {"psr-4": {"Omnistate\\": ""}, "exclude-from-classmap": ["/Tests/", "/docker/"]},
     "autoload-dev": {"psr-4": {"Omnistate\\Tests\\": "Tests/"}},

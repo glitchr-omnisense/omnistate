@@ -3,8 +3,8 @@
 Omnistate is one PHP contract for what states and public registers know. An application asks the
 same questions whatever register answers them - who is this company, does this VAT number exist,
 who holds this domain or this IP range, who is this health professional, which acts and documents
-name this person - and gets the same models back: `Company`, `VatCheck`, `Domain`, `Network`,
-`Professional`, `Facility`, `CivilRecord`. Each register is a package of its own
+name this person, what does this statistical series say - and gets the same models back:
+`Company`, `VatCheck`, `Domain`, `Network`, `Professional`, `Facility`, `CivilRecord`, `Series`. Each register is a package of its own
 (`omnistate/annuaire-entreprises`, `omnistate/vies`...) that turns those questions into the
 service's API calls.
 
@@ -17,6 +17,7 @@ $omnistate->network('193.0.6.139');        // Network: an IP range or an AS numb
 $omnistate->professional('10003461033');   // Professional: an RPPS number
 $omnistate->facility('754567860');         // Facility: a FINESS number
 $omnistate->civilRecords(new CivilQuery(familyName: 'Chirac', born: Period::year(1932)));   // CivilRecord[]
+$omnistate->series('insee:IRL', last: 4);  // Series: the rent reference index's last quarters
 ```
 
 The facade `Omnistate\Omnistate` holds the registers installed, asks the one that takes each
@@ -50,7 +51,7 @@ from the optional cache: keeping a VAT check or a company's details is the appli
 
 ## Registers
 
-Eight packages. The contracts are those each class implements; what each takes is what its
+Eleven packages. The contracts are those each class implements; what each takes is what its
 `supports()` answers (probed in the [harness](harness.md) on 2026-10-25 against the code at
 HEAD).
 
@@ -64,18 +65,21 @@ HEAD).
 | [`omnistate/openarchieven`](https://github.com/glitchr-omnisense/omnistate-openarchieven) | `OpenArchieven\OpenArchieven` | civil | NL, BE, FR, SR; births, baptisms, marriages, deaths, burials, other; scans | open, no key |
 | [`omnistate/national-archives-uk`](https://github.com/glitchr-omnisense/omnistate-national-archives-uk) | `NationalArchivesUk\NationalArchivesUk` | civil | GB, catalogue entries (kind `other`) only | open, no key |
 | [`omnistate/nara`](https://github.com/glitchr-omnisense/omnistate-nara) | `Nara\Nara` | civil | US, catalogue entries (kind `other`) only; links to scans | free key (10,000 calls a month) |
+| [`omnistate/insee`](https://github.com/glitchr-omnisense/omnistate-insee) | `Insee\Insee` | statistics | INSEE's BDM: an idBank, or IRL, ICC, ILC, ILAT, IPC; history | open, no key (30 calls a minute) |
+| [`omnistate/eurostat`](https://github.com/glitchr-omnisense/omnistate-eurostat) | `Eurostat\Eurostat` | statistics | a Eurostat dataset and its filters | open, no key |
+| [`omnistate/ecb`](https://github.com/glitchr-omnisense/omnistate-ecb) | `Ecb\Ecb` | statistics | an ECB Data Portal dataflow and key; EUR/USD, MRO | open, no key |
 
-Five of the eight are open: no account and no key. Each register's own manual lists its
+Eight of the eleven are open: no account and no key. Each register's own manual lists its
 endpoints, options, mapping and limits.
 
 ## How this manual is organised
 
 - [Installation](installation.md): requirements, a first script in plain PHP and its answer.
 - [Symfony](symfony.md) and [Laravel](laravel.md): the facade in a framework.
-- [Concepts](concepts.md): the facade, the six contracts, every model and enum.
+- [Concepts](concepts.md): the facade, the seven contracts, every model and enum.
 - Usage: [companies](usage-companies.md), [VAT numbers](usage-vat.md),
   [domains and networks](usage-internet.md), [professionals and facilities](professionals.md),
-  [civil registers](civil.md), [identifiers](usage-identifiers.md).
+  [civil registers](civil.md), [statistics](statistics.md), [identifiers](usage-identifiers.md).
 - [Configuration reference](configuration.md): the facade's arguments, each register's
   constructor, the bundle's tree.
 - [Errors](errors.md): the four exceptions and the family's rule on them.

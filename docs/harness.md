@@ -49,7 +49,8 @@ One PHP script, `docker/harness/bin/bare`, that requires the autoloader and noth
 builds `Omnistate\Omnistate` from the source packages installed - each registry given the HTTP
 client to call with -, says which registries it has, then asks for the company 901821074
 (Recherche d'entreprises), the VAT number FR53901821074 (VIES) and the domain glitchr.dev
-(IANA's RDAP bootstrap, then the registry's server): four calls to open services, no key. The
+(IANA's RDAP bootstrap, then the registry's server) and the rent reference index (INSEE's BDM): five
+calls to open services, no key. The
 registries that take a key or are asked about people (annuaire-sante, the civil registers) are
 built and named, not called. Then it lists what PHP loaded and exits 1 if a class of a framework
 is among it (`Symfony\Component\DependencyInjection`, `Config`, `HttpKernel`, `HttpFoundation`,

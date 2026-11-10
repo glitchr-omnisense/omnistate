@@ -153,14 +153,16 @@ final class MatchIdContractTest extends TestCase
 | `civilIdentifier(): ?string` | for a civil register | `null` | a record they know, by its `CivilRecord::$identifier` |
 | `domainName(): string` | no | `glitchr.dev` | a domain they know |
 | `networkAddress(): string` | no | `AS3333` | an IP address or AS number they know |
+| `seriesIdentifier(): string` | no | `IRL` | a series they know, as the source's `series()` takes it |
+| `datasetQuery(): string` | no | `prices` | what `datasets()` is asked; the recorded catalogue finds something |
 
 The suite's client answers each request from `recordedAnswers()` by its method and full address,
 then its method and path, then `*`; a request with none is answered HTTP 404, and when a test then
 fails on an `UnavailableException` the message names every request that had no recorded answer.
 
-### The five tests
+### The six tests
 
-`testItImplementsTheFamilysContractsUnderItsName` - the register implements one of the six
+`testItImplementsTheFamilysContractsUnderItsName` - the register implements one of the seven
 contracts at least, and `name()` is kebab case (`^[a-z0-9]+(-[a-z0-9]+)*$`). A civil register
 declares at least one country, each ISO alpha-2 upper case, at least one kind, as a list, a
 period whose start is not after its end, and a boolean `hasImages()`.
@@ -171,7 +173,12 @@ a company or professional register does not support `not an identifier` and the 
 `US123456789`; a facility register does not support `not an identifier` and `facility()` throws;
 a civil register does not support a question about `AQ` (Antarctica) nor one with nothing to
 search on, and `civilRecords()` naming it throws; an Internet registry answers `null` for
-`domain('not a domain')`. No request may have been made.
+`domain('not a domain')`; a statistics source does not support `not a series id` and `series()`
+naming it throws. No request may have been made.
+
+`testItsUsagePolicyIsDeclaredAndHonoured` - its `policy.json` reads and names it; through the
+facade, a site's limit of one call a minute refuses the second call with no request, and a 429
+(Retry-After 30) refuses the next call with no request (`UsageLimitReachedException`).
 
 `testUnavailableIsNeverReadAsNotFound` - every question of every contract the register
 implements (through the facade, but `search()` asked of the register itself) is asked seven

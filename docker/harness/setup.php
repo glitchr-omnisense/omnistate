@@ -42,10 +42,15 @@ if (($meta['name'] ?? null) === 'omnisense/contracts') {
 }
 $require['omnisense/contracts'] = '1.x-dev';
 
-foreach ($plugins as $slug => [$testsNs]) {
+foreach ($plugins as $slug => $plugin) {
+    $testsNs = $plugin[0];
     $name = "omnistate/$slug";
     $dir = "$local/$slug";
     $meta = is_file("$dir/composer.json") ? json_decode((string) file_get_contents("$dir/composer.json"), true) : null;
+    if (($meta['name'] ?? null) !== $name && true === ($plugin[3] ?? false)) {
+        // Not on GitHub yet: only its checkout can be installed.
+        continue;
+    }
     if (($meta['name'] ?? null) === $name) {
         $repositories[] = ['type' => 'path', 'url' => $dir, 'options' => ['symlink' => true, 'versions' => [$name => '1.x-dev']]];
         $packageDir = $dir;

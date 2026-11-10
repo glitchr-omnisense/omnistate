@@ -33,17 +33,19 @@ final class JsonClient extends \Omnisense\Contracts\Http\JsonClient
 
     /**
      * Any call, its answer as it came - XML, JSON, anything -, null when
-     * the register answers 404.
+     * the register answers 404; the error statuses in $pass given back too,
+     * for the register to read (Eurostat's 400 "no results").
      *
      * @param array<string, mixed>               $options json, body or query, as Symfony's HttpClient takes them
      * @param array<string, string|list<string>> $headers
+     * @param list<int>                          $pass    error statuses given back instead of thrown
      *
      * @throws UnavailableException a 429 with its wait, 401, 403, 5xx, no answer
      * @throws OmnistateException   another 4xx
      */
-    public function answer(string $method, string $url, array $options = [], array $headers = []): ?Answer
+    public function answer(string $method, string $url, array $options = [], array $headers = [], array $pass = []): ?Answer
     {
-        $answer = $this->raw($method, $url, $options, $headers, [404, 429]);
+        $answer = $this->raw($method, $url, $options, $headers, [404, 429, ...$pass]);
         if (429 === $answer->status) {
             $wait = RateLimitHeaders::wait(429, $answer->headers);
 

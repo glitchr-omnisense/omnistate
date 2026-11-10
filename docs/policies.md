@@ -26,6 +26,7 @@ named in its `composer.json` (`extra.omnisense.policy`) and given by its class
 ```php
 $omnistate = new Omnistate(
     companies: [new AnnuaireEntreprises($http)],
+    statistics: [new Insee($http)],
     // The site's own limits, by register name: added to the declared ones, never looser.
     policies: ['annuaire-entreprises' => ['rateLimits' => [['max' => 5000, 'window' => 'day', 'operations' => []]]]],
     // What the site is: a use the terms forbid fails at once (UsageNotPermitted).
@@ -35,13 +36,13 @@ $omnistate = new Omnistate(
     limiter: $limiter,
 );
 
-$omnistate->policy('annuaire-entreprises')->rights->attribution->text;
+$omnistate->policy('insee')->rights->attribution->text;   // "Source : Insee"
 $omnistate->guard('annuaire-entreprises')->remaining('company');
 foreach ($omnistate->policies() as $name => $policy) { /* a "sources" page */ }
 ```
 
 An operation is the contract method's name: `company`, `search`, `check`, `professional`,
-`facility`, `find`, `domain`, `network`. A limit with no operations counts
+`facility`, `find`, `domain`, `network`, `series`, `datasets`. A limit with no operations counts
 them all.
 
 ## Tightening
@@ -65,6 +66,9 @@ guard is first built.
 | national-archives-uk | 1 a second, 3,000 a day | unknown | docs, 2026-10-25 |
 | openarchieven | 4 a second | unknown | docs, 2026-10-25 |
 | vies | unknown (VIES refuses by concurrency) | unknown | docs, 2026-10-25 |
+| insee | 30 a minute | free reuse, commercial too; "Insee, BDM/<series>, extraction au <date>" | the BDM API's CGU and plan, 2026-11-10 |
+| eurostat | unknown (none stated) | CC BY 4.0, commercial reuse authorised, source acknowledged | Eurostat's copyright notice and API guide, 2026-11-10 |
+| ecb | unknown (none stated) | free use, "ECB" cited as the source, changes stated | the ECB's disclaimer and copyright, 2026-11-10 |
 
 The registers written before the policies carry the figures their manuals gave on 2026-10-25,
 with `verifiedAt: null` and their rights `unknown` until their terms are read again at the source:
