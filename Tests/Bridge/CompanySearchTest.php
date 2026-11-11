@@ -2,6 +2,7 @@
 
 namespace Omnistate\Tests\Bridge;
 
+use Omnisense\Contracts\Http\Data;
 use Omnistate\Bridge\Symfony\CompanySearch;
 use Omnistate\Bridge\Symfony\Controller\CompanySearchController;
 use Omnistate\Bridge\Symfony\Form\CompanySearchType;
@@ -48,7 +49,7 @@ final class CompanySearchTest extends TestCase
     {
         $found = (new CompanySearchController(new CompanySearch(new Omnistate([$this->registry([$this->exampleShop()])]))))(new Request(['q' => 'example shop']));
         self::assertSame(200, $found->getStatusCode());
-        self::assertSame('FR88100000009', json_decode((string) $found->getContent(), true)['results'][0]['vatNumber']);
+        self::assertSame('FR88100000009', Data::of(json_decode((string) $found->getContent(), true))->get('results.0.vatNumber'));
 
         $down = (new CompanySearchController(new CompanySearch(new Omnistate([$this->registry([], new UnavailableException('429'))]))))(new Request(['q' => 'example shop']));
         self::assertSame(503, $down->getStatusCode());
@@ -63,6 +64,8 @@ final class CompanySearchTest extends TestCase
             ->getForm();
 
         $attr = $form->createView()['company']->vars['attr'];
+        self::assertIsArray($attr);
+        self::assertIsString($attr['data-omnistate-fill']);
 
         self::assertSame('/omnistate/company/search', $attr['data-omnistate-company-search'], 'no router: the default path');
         self::assertSame(['store_vatNumber' => 'vatNumber'], json_decode($attr['data-omnistate-fill'], true), 'only the siblings that exist');
@@ -82,12 +85,17 @@ final class CompanySearchTest extends TestCase
         );
     }
 
-    /** @param list<Company> $companies */
+    /**
+     * @param list<Company> $companies
+     *
+     * @return CompanyRegistryInterface&object{asked: int}
+     */
     private function registry(array $companies, ?\Throwable $failure = null): CompanyRegistryInterface
     {
         return new class($companies, $failure) implements CompanyRegistryInterface {
             public int $asked = 0;
 
+            /** @param list<Company> $companies */
             public function __construct(private readonly array $companies, private readonly ?\Throwable $failure)
             {
             }

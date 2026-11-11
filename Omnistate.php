@@ -100,10 +100,10 @@ final class Omnistate
         ?RateLimiterInterface $limiter = null,
         iterable $statistics = [],
     ) {
-        $this->companies = [...$companies];
-        $this->vat = [...$vat];
-        $this->professionals = [...$professionals];
-        $this->civil = [...$civil];
+        $this->companies = array_values([...$companies]);
+        $this->vat = array_values([...$vat]);
+        $this->professionals = array_values([...$professionals]);
+        $this->civil = array_values([...$civil]);
         $this->statistics = array_values([...$statistics]);
         $this->guards = new Guards($policies, $usage, $limiter);
     }
@@ -157,7 +157,7 @@ final class Omnistate
     {
         $normalized = VatNumber::normalize($number);
         if (null === $normalized || !VatNumber::isWellFormed($normalized)) {
-            return new VatCheck(strtoupper(preg_replace('/\s/', '', $number)), false, new \DateTimeImmutable(), 'format');
+            return new VatCheck(strtoupper((string) preg_replace('/\s/', '', $number)), false, new \DateTimeImmutable(), 'format');
         }
         $requester = VatNumber::normalize($requester ?? $this->requester);
         foreach ($this->vat as $registry) {

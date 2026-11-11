@@ -23,7 +23,8 @@ final class VatNumberValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!VatNumberRules::isWellFormed((string) $value)) {
+        $text = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        if (!VatNumberRules::isWellFormed($text)) {
             $this->context->buildViolation($constraint->message)->setParameter('{{ value }}', $this->formatValue($value))->addViolation();
 
             return;
@@ -32,7 +33,7 @@ final class VatNumberValidator extends ConstraintValidator
             return;
         }
         try {
-            $known = $this->omnistate->vat((string) $value)->valid;
+            $known = $this->omnistate->vat($text)->valid;
         } catch (OmnistateException) {
             return; // the register did not answer: not a reason to refuse the number
         }

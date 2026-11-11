@@ -23,6 +23,7 @@ final readonly class Network
         public ?\DateTimeImmutable $registeredAt = null,
         public ?\DateTimeImmutable $changedAt = null,
         public ?string $server = null,
+        /** @var array<mixed> the register's whole answer, as it was decoded */
         public array $raw = [],
     ) {
     }

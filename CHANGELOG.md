@@ -41,6 +41,12 @@
   (`OMNISENSE_CONTRACTS`) or GitHub.
 
 ### Changed
+- PHPStan at level max with an empty baseline, types only: the models' `$raw` is `array<mixed>`,
+  `CompanySearch::row()` its row's shape (`CompanyRow`), `CivilQuery`'s `$kinds` any array of kinds
+  (listed by it). A validator given an object that is not `Stringable`, and `Sex::fromAny()` given
+  one, read it as an empty string (a violation, `Sex::UNKNOWN`) instead of throwing PHP's `Error`.
+  `RegistryContractTests` hands the facade a facility register as a professional one only when it
+  is one (`ProfessionalRegistryInterface`, as `Omnistate`'s `professionals:` takes them).
 - `OmnistateException` implements omnisense/contracts' `ExceptionInterface`.
 - `Http\Redaction` is omnisense/contracts' under the family's name: the same methods.
 - `Omnistate\Http\Redaction`: a request's secrets (`secrets()`), a text without them (`text()`), a

@@ -22,6 +22,7 @@ final readonly class Domain
         public bool $dnssec = false,
         /** The server that answered. */
         public ?string $server = null,
+        /** @var array<mixed> the register's whole answer, as it was decoded */
         public array $raw = [],
     ) {
     }

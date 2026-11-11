@@ -50,9 +50,11 @@ final class OmnistateTest extends TestCase
         self::assertSame([['DE123456789', 'FR53901821074']], $vat->asked, 'normalized, with the requester');
     }
 
+    /** @return CompanyRegistryInterface&object{asked: list<string>} */
     private function companies(): CompanyRegistryInterface
     {
         return new class implements CompanyRegistryInterface {
+            /** @var list<string> */
             public array $asked = [];
 
             public function name(): string
@@ -65,7 +67,7 @@ final class OmnistateTest extends TestCase
                 return (bool) preg_match('/^\d{9}(\d{5})?$/', $identifier);
             }
 
-            public function company(string $identifier): ?Company
+            public function company(string $identifier): Company
             {
                 $this->asked[] = $identifier;
 
@@ -79,9 +81,11 @@ final class OmnistateTest extends TestCase
         };
     }
 
+    /** @return VatRegistryInterface&object{asked: list<array{string, ?string}>} */
     private function vat(): VatRegistryInterface
     {
         return new class implements VatRegistryInterface {
+            /** @var list<array{string, ?string}> */
             public array $asked = [];
 
             public function name(): string

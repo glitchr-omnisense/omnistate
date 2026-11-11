@@ -17,7 +17,8 @@ final class SirenValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!SirenNumber::isValid((string) $value)) {
+        $text = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        if (!SirenNumber::isValid($text)) {
             $this->context->buildViolation($constraint->message)->setParameter('{{ value }}', $this->formatValue($value))->addViolation();
         }
     }

@@ -153,7 +153,7 @@ trait RegistryContractTests
         $registry = $this->registry(new MockHttpClient());
         $contracts = array_filter([CompanyRegistryInterface::class, VatRegistryInterface::class, ProfessionalRegistryInterface::class, FacilityRegistryInterface::class, CivilRegistryInterface::class, InternetRegistryInterface::class, StatisticsRegistryInterface::class], static fn (string $contract) => $registry instanceof $contract);
         self::assertNotSame([], $contracts, 'a register implements one of the family\'s contracts at least');
-        self::assertMatchesRegularExpression('/^[a-z0-9]+(-[a-z0-9]+)*$/', $registry->name(), 'a short name, its models\' $source');
+        self::assertMatchesRegularExpression('/^[a-z0-9]+(-[a-z0-9]+)*$/', $this->contractName($registry), 'a short name, its models\' $source');
 
         if ($registry instanceof CivilRegistryInterface) {
             self::assertNotSame([], $registry->countries());
@@ -161,12 +161,11 @@ trait RegistryContractTests
                 self::assertMatchesRegularExpression('/^[A-Z]{2}$/', $country, 'countries: ISO 3166-1 alpha-2');
             }
             self::assertNotSame([], $registry->kinds());
-            self::assertIsList($registry->kinds());
             $period = $registry->period();
             if (null !== $period?->from && null !== $period->to) {
                 self::assertLessThanOrEqual($period->to->year, $period->from->year);
             }
-            self::assertIsBool($registry->hasImages());
+            $registry->hasImages();
         }
     }
 
@@ -277,7 +276,7 @@ trait RegistryContractTests
         $registry = $this->registry($this->contractHttp());
         // Each question from an application of its own: a register's policy may allow one call a
         // second (national-archives-uk), and these are not questions about limits.
-        $name = $registry->name();
+        $name = $this->contractName($registry);
 
         if ($registry instanceof CompanyRegistryInterface) {
             $company = $this->answered(fn () => $this->omnistate($registry)->company($this->companyIdentifier()), 'company()');
@@ -367,7 +366,7 @@ trait RegistryContractTests
         $registry = $this->registry($this->contractHttp());
         if ($registry instanceof DeclaresUsagePolicyInterface) {
             $policy = $registry->usagePolicy();
-            self::assertSame($registry->name(), $policy->provider, 'policy.json names the register as name() does');
+            self::assertSame($this->contractName($registry), $policy->provider, 'policy.json names the register as name() does');
             self::assertNotNull($policy->provenance->terms, 'policy.json links to the terms it was read from');
         }
 
@@ -464,15 +463,34 @@ trait RegistryContractTests
     /** @param array<string, mixed> $policy the site's tightening of the register's policy */
     private function omnistate(object $registry, array $policy = []): Omnistate
     {
+        $name = self::named($registry);
+
         return new Omnistate(
-            policies: [] === $policy || !method_exists($registry, 'name') ? [] : [(string) $registry->name() => $policy],
+            policies: [] === $policy || null === $name ? [] : [$name => $policy],
             companies: $registry instanceof CompanyRegistryInterface ? [$registry] : [],
             vat: $registry instanceof VatRegistryInterface ? [$registry] : [],
             internet: $registry instanceof InternetRegistryInterface ? $registry : null,
-            professionals: $registry instanceof ProfessionalRegistryInterface || $registry instanceof FacilityRegistryInterface ? [$registry] : [],
+            // A facility register is a professional one that knows facilities too (FacilityRegistryInterface).
+            professionals: $registry instanceof ProfessionalRegistryInterface ? [$registry] : [],
             civil: $registry instanceof CivilRegistryInterface ? [$registry] : [],
             statistics: $registry instanceof StatisticsRegistryInterface ? [$registry] : [],
         );
+    }
+
+    /** The registry's name(): each of the family's contracts declares it. */
+    private function contractName(object $registry): string
+    {
+        $name = self::named($registry);
+        self::assertNotNull($name, \sprintf('%s implements none of the family\'s contracts', get_debug_type($registry)));
+
+        return $name;
+    }
+
+    private static function named(object $registry): ?string
+    {
+        return $registry instanceof CompanyRegistryInterface || $registry instanceof VatRegistryInterface || $registry instanceof ProfessionalRegistryInterface
+            || $registry instanceof FacilityRegistryInterface || $registry instanceof CivilRegistryInterface || $registry instanceof InternetRegistryInterface
+            || $registry instanceof StatisticsRegistryInterface ? $registry->name() : null;
     }
 
     /** The suite's HTTP client: the recorded answers (with $notFound, only infrastructureAnswers()), HTTP 404 for anything else. */

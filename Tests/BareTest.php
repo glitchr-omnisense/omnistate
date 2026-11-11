@@ -2,6 +2,7 @@
 
 namespace Omnistate\Tests;
 
+use Omnisense\Contracts\Http\Data;
 use Omnistate\Bridge\Symfony\OmnistateBundle;
 use Omnistate\AnnuaireEntreprises\AnnuaireEntreprises;
 use Omnistate\Iana\Rdap;
@@ -28,13 +29,15 @@ final class BareTest extends TestCase
         [$status, $report] = self::php([__DIR__.'/../docker/harness/bin/bare', '--recorded', '--json']);
 
         self::assertSame(0, $status);
-        self::assertContains(Omnistate::class, $report['symbols'], 'Omnistate was built there');
+        self::assertContains(Omnistate::class, $report->strings('symbols'), 'Omnistate was built there');
         self::assertSame([], self::framework($report), 'no class nor file of a framework');
-        $installed = array_values(array_filter(array_column(require __DIR__.'/../docker/harness/plugins.php', 1), 'class_exists'));
+        $plugins = require __DIR__.'/../docker/harness/plugins.php';
+        self::assertIsArray($plugins);
+        $installed = array_values(array_filter(array_column($plugins, 1), static fn (mixed $class): bool => \is_string($class) && class_exists($class)));
         foreach ($installed as $registry) {
-            self::assertContains($registry, $report['symbols'], 'every source package installed, its registry built');
+            self::assertContains($registry, $report->strings('symbols'), 'every source package installed, its registry built');
         }
-        self::assertCount(\count($installed), array_merge(...array_values($report['registries'])));
+        self::assertCount(\count($installed), array_merge(...array_map(static fn (Data $kind): array => $kind->toArray(), $report->data('registries')->items())));
     }
 
     public function testRegistriesAnswerFromRecordedAnswersWithNoClassOfAFrameworkLoaded(): void
@@ -45,13 +48,13 @@ final class BareTest extends TestCase
         [$status, $report] = self::php([__DIR__.'/../docker/harness/bin/bare', '--recorded', '--json']);
 
         self::assertSame(0, $status);
-        self::assertTrue($report['recorded']);
-        self::assertSame([], $report['unavailable']);
-        self::assertSame(['identifier' => '901821074', 'name' => 'GLITCH ART', 'legal_form' => 'SARL', 'status' => 'active', 'created' => '2021-07-03', 'head_office' => '90182107400019', 'city' => 'ILLKIRCH-GRAFFENSTADEN', 'vat' => 'FR53901821074', 'source' => 'annuaire-entreprises'], $report['company']);
-        self::assertSame(['FR53901821074', true, 'SARL GLITCH ART', 'vies'], [$report['vat']['number'], $report['vat']['valid'], $report['vat']['name'], $report['vat']['source']]);
-        self::assertSame(['glitchr.dev', 'Gandi SAS', '2022-05-19', '2027-05-19'], [$report['domain']['name'], $report['domain']['registrar'], $report['domain']['registered'], $report['domain']['expires']]);
-        self::assertSame('https://pubapi.registry.google/rdap/', $report['domain']['server'], 'found through IANA\'s bootstrap');
-        self::assertContains('Symfony\\Component\\HttpClient\\MockHttpClient', $report['symbols'], 'the answers came through the HTTP client given');
+        self::assertTrue($report->get('recorded'));
+        self::assertSame([], $report->get('unavailable'));
+        self::assertSame(['identifier' => '901821074', 'name' => 'GLITCH ART', 'legal_form' => 'SARL', 'status' => 'active', 'created' => '2021-07-03', 'head_office' => '90182107400019', 'city' => 'ILLKIRCH-GRAFFENSTADEN', 'vat' => 'FR53901821074', 'source' => 'annuaire-entreprises'], $report->get('company'));
+        self::assertSame(['FR53901821074', true, 'SARL GLITCH ART', 'vies'], [$report->get('vat.number'), $report->get('vat.valid'), $report->get('vat.name'), $report->get('vat.source')]);
+        self::assertSame(['glitchr.dev', 'Gandi SAS', '2022-05-19', '2027-05-19'], [$report->get('domain.name'), $report->get('domain.registrar'), $report->get('domain.registered'), $report->get('domain.expires')]);
+        self::assertSame('https://pubapi.registry.google/rdap/', $report->get('domain.server'), 'found through IANA\'s bootstrap');
+        self::assertContains('Symfony\\Component\\HttpClient\\MockHttpClient', $report->strings('symbols'), 'the answers came through the HTTP client given');
         self::assertSame([], self::framework($report), 'no class nor file of a framework');
     }
 
@@ -69,14 +72,20 @@ final class BareTest extends TestCase
         self::assertNotEmpty(preg_grep('~/symfony/http-kernel/~', $framework));
     }
 
-    /**
-     * @param array{symbols: list<string>, files: list<string>} $report
-     *
-     * @return list<string> the classes, interfaces, traits and files of a framework among those loaded
-     */
-    private static function framework(array $report): array
+    /** @return list<string> the classes, interfaces, traits and files of a framework among those loaded */
+    private static function framework(Data $report): array
     {
-        return [...array_values(preg_grep(self::FRAMEWORK, $report['symbols'])), ...array_values(preg_grep(self::FRAMEWORK_FILES, $report['files']))];
+        return [...self::matching(self::FRAMEWORK, $report->strings('symbols')), ...self::matching(self::FRAMEWORK_FILES, $report->strings('files'))];
+    }
+
+    /**
+     * @param list<string> $names
+     *
+     * @return list<string> those the pattern matches, as preg_grep() keeps them
+     */
+    private static function matching(string $pattern, array $names): array
+    {
+        return array_values(array_filter($names, static fn (string $name): bool => 1 === preg_match($pattern, $name)));
     }
 
     /**
@@ -84,7 +93,7 @@ final class BareTest extends TestCase
      *
      * @param list<string> $arguments
      *
-     * @return array{int, array<string, mixed>} the exit status, the JSON printed
+     * @return array{int, Data} the exit status, the JSON printed
      */
     private static function php(array $arguments): array
     {
@@ -97,6 +106,6 @@ final class BareTest extends TestCase
         $report = json_decode($out, true);
         self::assertIsArray($report, 'PHP exited '.$status.': '.$err.$out);
 
-        return [$status, $report];
+        return [$status, Data::of($report)];
     }
 }

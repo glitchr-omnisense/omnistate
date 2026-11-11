@@ -17,7 +17,8 @@ final class SiretValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!SiretNumber::isValid((string) $value)) {
+        $text = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        if (!SiretNumber::isValid($text)) {
             $this->context->buildViolation($constraint->message)->setParameter('{{ value }}', $this->formatValue($value))->addViolation();
         }
     }

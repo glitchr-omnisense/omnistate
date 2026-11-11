@@ -12,6 +12,8 @@ use Omnistate\Omnistate;
  * hand them out: one flat row each, with what a form may fill - the SIREN, the
  * head office's SIRET and address, and the French intra-EU VAT number derived
  * from the SIREN (VIES still has the last word on it).
+ *
+ * @phpstan-type CompanyRow array{siren: string, siret: ?string, name: string, vatNumber: ?string, address: ?string, postalCode: ?string, city: ?string, activity: ?string, legalForm: ?string, active: bool, country: string}
  */
 final class CompanySearch
 {
@@ -23,7 +25,7 @@ final class CompanySearch
     }
 
     /**
-     * @return list<array{siren: string, siret: ?string, name: string, vatNumber: ?string, address: ?string, postalCode: ?string, city: ?string, activity: ?string, legalForm: ?string, active: bool, country: string}>
+     * @return list<CompanyRow>
      *
      * @throws OmnistateException when no registry answers
      */
@@ -34,9 +36,10 @@ final class CompanySearch
             return [];
         }
 
-        return array_values(array_map(self::row(...), $this->omnistate->search($query, max(1, min(self::MAX_RESULTS, $limit)))));
+        return array_map(self::row(...), $this->omnistate->search($query, max(1, min(self::MAX_RESULTS, $limit))));
     }
 
+    /** @return CompanyRow */
     public static function row(Company $company): array
     {
         $address = $company->headOffice?->address;

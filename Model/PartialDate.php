@@ -64,9 +64,11 @@ final readonly class PartialDate implements \Stringable
     /** The day itself when it is whole, null otherwise. */
     public function toDate(): ?\DateTimeImmutable
     {
-        return $this->isComplete() && checkdate($this->month, $this->day, $this->year)
-            ? (new \DateTimeImmutable('today'))->setDate($this->year, $this->month, $this->day)
-            : null;
+        if (null === $this->year || null === $this->month || null === $this->day || !checkdate($this->month, $this->day, $this->year)) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable('today'))->setDate($this->year, $this->month, $this->day);
     }
 
     /** The first day it can be. */

@@ -7,20 +7,16 @@ use Omnistate\Exception\NotSupportedException;
 use Omnistate\Exception\UnavailableException;
 use Omnistate\Identifier\CountryCode;
 use Omnistate\MatchId\MatchId;
-use Omnistate\Model\Archive;
-use Omnistate\Model\CivilPerson;
 use Omnistate\Model\CivilQuery;
 use Omnistate\Model\CivilRecord;
 use Omnistate\Model\CivilRecordKind;
 use Omnistate\Model\PartialDate;
 use Omnistate\Model\Period;
-use Omnistate\Model\Place;
 use Omnistate\Model\Sex;
 use Omnistate\Nara\Nara;
 use Omnistate\NationalArchivesUk\NationalArchivesUk;
 use Omnistate\Omnistate;
 use Omnistate\OpenArchieven\OpenArchieven;
-use Omnistate\Registry\CivilRegistryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -45,10 +41,10 @@ final class CivilTest extends TestCase
         $year = new PartialDate(1932);
         self::assertFalse($year->isComplete());
         self::assertNull($year->toDate());
-        self::assertSame('1932-01-01', $year->earliest()->format('Y-m-d'));
-        self::assertSame('1932-12-31', $year->latest()->format('Y-m-d'));
-        self::assertSame('1932-02-29', (new PartialDate(1932, 2))->latest()->format('Y-m-d'));
-        self::assertSame('1932-11-29', (new PartialDate(1932, 11, 29))->toDate()->format('Y-m-d'));
+        self::assertSame('1932-01-01', $year->earliest()?->format('Y-m-d'));
+        self::assertSame('1932-12-31', $year->latest()?->format('Y-m-d'));
+        self::assertSame('1932-02-29', (new PartialDate(1932, 2))->latest()?->format('Y-m-d'));
+        self::assertSame('1932-11-29', (new PartialDate(1932, 11, 29))->toDate()?->format('Y-m-d'));
         self::assertNull((new PartialDate(1931, 2, 30))->toDate(), 'a day that does not exist');
         self::assertSame('2019-09-26', (string) PartialDate::fromDate(new \DateTimeImmutable('2019-09-26')));
     }
@@ -193,16 +189,20 @@ final class CivilTest extends TestCase
         $container->register('http_client', MockHttpClient::class)->setPublic(true)->setSynthetic(true);
         $container->register('cache.app', ArrayAdapter::class);
         $bundle = new OmnistateBundle();
-        $container->registerExtension($bundle->getContainerExtension());
+        $extension = $bundle->getContainerExtension();
+        self::assertNotNull($extension);
+        $container->registerExtension($extension);
         $container->loadFromExtension('omnistate', ['matchid' => ['token' => 't'], 'nara' => ['api_key' => 'k']]);
         $container->compile();
         $headers = [];
         $container->set('http_client', new MockHttpClient(function (string $method, string $url, array $options) use (&$headers) {
+            self::assertIsArray($options['headers']);
             $headers = $options['headers'];
 
             return new MockResponse('{"response":{"total":0,"persons":[]}}');
         }));
         $omnistate = $container->get(Omnistate::class);
+        self::assertInstanceOf(Omnistate::class, $omnistate);
 
         self::assertSame(['matchid', 'openarchieven', 'national-archives-uk', 'nara'], array_map(static fn ($r) => $r->name(), $omnistate->civilRegistries()));
         self::assertSame(['BE', 'FR', 'GB', 'NL', 'SR', 'US'], $omnistate->civilCountries());
@@ -214,63 +214,12 @@ final class CivilTest extends TestCase
         self::assertContains('x-api-key: k', $headers, 'the key configured, in its header');
     }
 
-    private function registry(string $name, array $countries, array $kinds): CivilRegistryInterface
+    /**
+     * @param list<string>          $countries
+     * @param list<CivilRecordKind> $kinds
+     */
+    private function registry(string $name, array $countries, array $kinds): FakeCivilRegistry
     {
-        return new class($name, $countries, $kinds) implements CivilRegistryInterface {
-            public int $searches = 0;
-            public bool $down = false;
-
-            public function __construct(private string $name, private array $countries, private array $kinds)
-            {
-            }
-
-            public function name(): string
-            {
-                return $this->name;
-            }
-
-            public function countries(): array
-            {
-                return $this->countries;
-            }
-
-            public function kinds(): array
-            {
-                return $this->kinds;
-            }
-
-            public function period(): ?Period
-            {
-                return null;
-            }
-
-            public function hasImages(): bool
-            {
-                return false;
-            }
-
-            public function supports(CivilQuery $query): bool
-            {
-                return $query->hasName() && $query->inCountries(...$this->countries) && $query->wantsAny(...$this->kinds);
-            }
-
-            public function search(CivilQuery $query): array
-            {
-                ++$this->searches;
-                if ($this->down) {
-                    throw new UnavailableException('down', 30);
-                }
-
-                return [$this->find('D-1')];
-            }
-
-            public function find(string $identifier): ?CivilRecord
-            {
-                return 'D-1' !== $identifier ? null : new CivilRecord(
-                    'D-1', CivilRecordKind::DEATH, $this->name, new PartialDate(1969, 4, 2), new Place('Illkirch', country: 'FR'),
-                    [new CivilPerson('Vasseur', ['Henri'], Sex::MALE, 'Deceased')], new Archive('Archives fictives', reference: 'registre 12'),
-                );
-            }
-        };
+        return new FakeCivilRegistry($name, $countries, $kinds);
     }
 }

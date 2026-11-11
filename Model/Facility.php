@@ -29,6 +29,7 @@ final readonly class Facility
         public array $identifiers = [],
         public bool $active = true,
         public ?\DateTimeImmutable $updatedAt = null,
+        /** @var array<mixed> the register's whole answer, as it was decoded */
         public array $raw = [],
     ) {
     }

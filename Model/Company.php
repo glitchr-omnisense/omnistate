@@ -40,6 +40,7 @@ final readonly class Company
         public array $collectiveAgreements = [],
         public ?string $vatNumber = null,
         public ?\DateTimeImmutable $updatedAt = null,
+        /** @var array<mixed> the register's whole answer, as it was decoded */
         public array $raw = [],
     ) {
     }

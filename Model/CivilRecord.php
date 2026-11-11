@@ -33,6 +33,7 @@ final readonly class CivilRecord
         public ?string $description = null,
         /** When the register dates it by a span ("1939-1945") rather than a day. */
         public ?Period $period = null,
+        /** @var array<mixed> the register's whole answer, as it was decoded */
         public array $raw = [],
     ) {
     }

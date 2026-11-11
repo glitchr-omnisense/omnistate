@@ -17,7 +17,8 @@ final class RppsValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!RppsNumber::isValid((string) $value)) {
+        $text = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        if (!RppsNumber::isValid($text)) {
             $this->context->buildViolation($constraint->message)->setParameter('{{ value }}', $this->formatValue($value))->addViolation();
         }
     }

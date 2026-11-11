@@ -19,7 +19,7 @@ final readonly class CivilQuery
     public int $page;
 
     /**
-     * @param list<CivilRecordKind> $kinds   the kinds wanted; empty: any
+     * @param array<CivilRecordKind> $kinds  the kinds wanted; empty: any
      * @param string|null           $country ISO 3166-1 alpha-2 of the country whose registers are asked; null: any
      */
     public function __construct(

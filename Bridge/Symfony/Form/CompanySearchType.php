@@ -61,20 +61,32 @@ final class CompanySearchType extends AbstractType
         // The sibling fields' element ids. Their views may not exist yet (those
         // declared after this one), so from the parent's id, as Symfony names
         // them: <parent id>_<name>.
+        // configureOptions() lets through an array for fill, integers for
+        // min_length and limit; Symfony gives every view its id and attr.
+        /** @var array<string, string> $fill */
+        $fill = $options['fill'];
+        /** @var int $minLength */
+        $minLength = $options['min_length'];
+        /** @var int $limit */
+        $limit = $options['limit'];
+        /** @var array<string, mixed> $attr */
+        $attr = $view->vars['attr'];
         $targets = [];
         $parent = $form->getParent();
-        foreach ($options['fill'] as $field => $key) {
+        foreach ($fill as $field => $key) {
             if (null !== $parent && null !== $view->parent && $parent->has($field)) {
-                $targets[$view->parent->vars['id'] . '_' . $field] = $key;
+                /** @var string $id */
+                $id = $view->parent->vars['id'];
+                $targets[$id . '_' . $field] = $key;
             }
         }
 
-        $view->vars['attr'] = array_merge($view->vars['attr'], [
+        $view->vars['attr'] = array_merge($attr, [
             'autocomplete' => 'off',
             'data-omnistate-company-search' => $options['endpoint'] ?? $this->urlGenerator?->generate('omnistate_company_search') ?? '/omnistate/company/search',
             'data-omnistate-fill' => json_encode($targets, \JSON_THROW_ON_ERROR),
-            'data-omnistate-min-length' => (string) $options['min_length'],
-            'data-omnistate-limit' => (string) $options['limit'],
+            'data-omnistate-min-length' => (string) $minLength,
+            'data-omnistate-limit' => (string) $limit,
         ]);
     }
 }

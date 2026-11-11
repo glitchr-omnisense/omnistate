@@ -17,7 +17,8 @@ final class FinessValidator extends ConstraintValidator
         if (null === $value || '' === $value) {
             return;
         }
-        if (!FinessNumber::isValid((string) $value)) {
+        $text = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        if (!FinessNumber::isValid($text)) {
             $this->context->buildViolation($constraint->message)->setParameter('{{ value }}', $this->formatValue($value))->addViolation();
         }
     }

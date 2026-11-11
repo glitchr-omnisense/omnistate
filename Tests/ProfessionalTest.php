@@ -69,17 +69,22 @@ final class ProfessionalTest extends TestCase
         $container->register('http_client', MockHttpClient::class)->setPublic(true)->setSynthetic(true);
         $container->register('cache.app', ArrayAdapter::class);
         $bundle = new OmnistateBundle();
-        $container->registerExtension($bundle->getContainerExtension());
+        $extension = $bundle->getContainerExtension();
+        self::assertNotNull($extension);
+        $container->registerExtension($extension);
         $container->loadFromExtension('omnistate', ['annuaire_sante' => ['api_key' => 'k']]);
         $container->compile();
         $headers = [];
         $container->set('http_client', new MockHttpClient(function (string $method, string $url, array $options) use (&$headers) {
+            self::assertIsArray($options['headers']);
             $headers = $options['headers'];
 
             return new \Symfony\Component\HttpClient\Response\MockResponse('{"resourceType":"Bundle","type":"searchset","total":0}');
         }));
 
-        self::assertNull($container->get(Omnistate::class)->professional('10000000017'), 'asked, and nobody by that number');
+        $omnistate = $container->get(Omnistate::class);
+        self::assertInstanceOf(Omnistate::class, $omnistate);
+        self::assertNull($omnistate->professional('10000000017'), 'asked, and nobody by that number');
         self::assertContains('ESANTE-API-KEY: k', $headers);
     }
 
@@ -93,9 +98,11 @@ final class ProfessionalTest extends TestCase
         self::assertCount(1, $validator->validate('580008800', new FinessConstraint()));
     }
 
+    /** @return ProfessionalRegistryInterface&FacilityRegistryInterface&object{asked: list<string>} */
     private function registry(): ProfessionalRegistryInterface
     {
         return new class implements ProfessionalRegistryInterface, FacilityRegistryInterface {
+            /** @var list<string> */
             public array $asked = [];
 
             public function name(): string
@@ -108,7 +115,7 @@ final class ProfessionalTest extends TestCase
                 return null !== Rpps::normalize($identifier);
             }
 
-            public function professional(string $identifier): ?Professional
+            public function professional(string $identifier): Professional
             {
                 $this->asked[] = $identifier;
 
@@ -125,7 +132,7 @@ final class ProfessionalTest extends TestCase
                 return null !== Finess::normalize($identifier);
             }
 
-            public function facility(string $identifier): ?Facility
+            public function facility(string $identifier): Facility
             {
                 return new Facility($identifier, 'Maison de santé', 'fake');
             }
