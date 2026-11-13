@@ -152,13 +152,23 @@ final class OmnistateBundle extends AbstractBundle
         if (class_exists(Nara::class)) {
             $services->set(Nara::class)->args([$http, $config['nara']['api_key'], $config['timeout']])->tag('omnistate.civil_registry');
         }
-        foreach ([Insee::class, Eurostat::class, Ecb::class] as $statistics) {
-            if (class_exists($statistics)) {
-                $services->set($statistics)->args([$http])->arg('$timeout', $config['timeout'])->tag('omnistate.statistics_registry');
-            }
+        // One class_exists() each: the sources are optional packages, and PHPStan (the package's CI analyses it
+        // alone) then knows each name it is given is a class.
+        $statistics = [];
+        if (class_exists(Insee::class)) {
+            $statistics[] = Insee::class;
+        }
+        if (class_exists(Eurostat::class)) {
+            $statistics[] = Eurostat::class;
+        }
+        if (class_exists(Ecb::class)) {
+            $statistics[] = Ecb::class;
+        }
+        foreach ($statistics as $source) {
+            $services->set($source)->args([$http])->arg('$timeout', $config['timeout'])->tag('omnistate.statistics_registry');
         }
         $internet = null;
-        if (class_exists(Rdap::class)) {
+        if (class_exists(Rdap::class) && class_exists(Bootstrap::class)) {
             $services->set(Bootstrap::class)->args([$http, null === $config['cache'] ? null : service($config['cache']), $config['timeout']]);
             $services->set(Rdap::class)->args([$http, service(Bootstrap::class), $config['timeout']]);
             $services->alias(InternetRegistryInterface::class, Rdap::class);

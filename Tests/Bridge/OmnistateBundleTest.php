@@ -19,6 +19,9 @@ final class OmnistateBundleTest extends TestCase
 {
     public function testEveryRegistryInstalledIsWiredWithTheRequesterAndTheCache(): void
     {
+        if (!class_exists(\Omnistate\Vies\Vies::class)) {
+            self::markTestSkipped('omnistate/vies is not installed.');
+        }
         $sent = [];
         $container = new ContainerBuilder();
         $container->register('http_client', MockHttpClient::class)->setPublic(true)->setSynthetic(true);

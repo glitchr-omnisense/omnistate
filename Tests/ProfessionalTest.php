@@ -65,6 +65,9 @@ final class ProfessionalTest extends TestCase
 
     public function testTheBundleWiresTheAnnuaireSanteWithItsKey(): void
     {
+        if (!class_exists(\Omnistate\AnnuaireSante\AnnuaireSante::class)) {
+            self::markTestSkipped('omnistate/annuaire-sante is not installed.');
+        }
         $container = new ContainerBuilder();
         $container->register('http_client', MockHttpClient::class)->setPublic(true)->setSynthetic(true);
         $container->register('cache.app', ArrayAdapter::class);

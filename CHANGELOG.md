@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased (1.x)
+## [Unreleased]
+
+## [1.0.0] - 2026-11-13
 
 ### Added
 - Statistics, the family's new capability (Marco, 2026-11-10: in omnistate, no new family):
@@ -41,6 +43,8 @@
   (`OMNISENSE_CONTRACTS`) or GitHub.
 
 ### Changed
+- Requires `omnisense/contracts: ^1.0`: stable versions, so `composer require omnisense/omnistate` installs in a project at the default minimum-stability. `extra.branch-alias` names 1.x (`1.x-dev`); the CI (`.github/workflows/ci.yml`, glitchr-studio/ci's shared workflow) and the release on a tag (`release.yml`).
+- The package passes its CI alone, without the sources: the bundle checks each statistics source and IANA's `Bootstrap` with a `class_exists()` of its own (PHPStan knew none of them), and the two bundle tests that need omnistate/vies or omnistate/annuaire-sante are skipped without them (the harness, which installs every source, still runs them).
 - PHPStan at level max with an empty baseline, types only: the models' `$raw` is `array<mixed>`,
   `CompanySearch::row()` its row's shape (`CompanyRow`), `CivilQuery`'s `$kinds` any array of kinds
   (listed by it). A validator given an object that is not `Stringable`, and `Sex::fromAny()` given
