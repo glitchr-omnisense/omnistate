@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-13
+
+### Changed
+- The examples, docs and recorded answers use a large listed company (DANONE, SIREN 552032534,
+  VAT FR27552032534) instead of a small company whose register record named its officer: README,
+  docs (installation, harness, usage, testing, symfony), the docblocks, the tests and
+  `docker/harness/recorded/` (Recherche d'entreprises' answer with its officers left out; the VIES
+  answer composed from the register's record). `RegistryContractTests`' defaults follow:
+  `companyIdentifier()` 552032534, `vatNumber()` FR27552032534, `searchQuery()` "danone" - a source
+  whose recorded answers are keyed on the identifier overrides them.
+
 ## [1.0.0] - 2026-11-13
 
 ### Added

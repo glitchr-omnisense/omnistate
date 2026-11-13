@@ -33,7 +33,7 @@ class FakeCompanies implements CompanyRegistryInterface
             throw $this->failure;
         }
 
-        return new Company($identifier, 'GLITCH ART', CompanyStatus::ACTIVE, 'FR', 'fake');
+        return new Company($identifier, 'DANONE', CompanyStatus::ACTIVE, 'FR', 'fake');
     }
 
     public function search(string $query, int $limit = 10): array

@@ -22,7 +22,7 @@ use Symfony\Component\HttpClient\HttpClient;
 
 $omnistate = new Omnistate(vat: [new Vies(HttpClient::create())]);
 
-foreach (['IE 6388047V', 'FR54901821074', 'gr 12345', 'NO123456789MVA', 'FR39356000000'] as $number) {
+foreach (['IE 6388047V', 'FR28552032534', 'gr 12345', 'NO123456789MVA', 'FR39356000000'] as $number) {
     try {
         $check = $omnistate->vat($number);
         printf("%-16s %-9s source %-6s %s\n", $check->number, $check->valid ? 'valid' : 'not valid', $check->source, $check->name ?? '');
@@ -36,7 +36,7 @@ foreach (['IE 6388047V', 'FR54901821074', 'gr 12345', 'NO123456789MVA', 'FR39356
 
 ```
 IE6388047V       valid     source vies   GOOGLE IRELAND LIMITED
-FR54901821074    not valid source format 
+FR28552032534    not valid source format 
 GR12345          not valid source format 
 NO123456789MVA   not valid source format 
 FR39356000000    valid     source vies   SA LA POSTE-DIRECTION GENERALE DE LA PO
@@ -52,7 +52,7 @@ becomes its French number - and checks it with `VatNumber::isWellFormed()`: the 
 shape after the prefix, and for France the key agreeing with the SIREN. A number that fails is
 answered at once, with no request: a `VatCheck` whose `valid` is `false` and whose `source` is
 `format`, its `number` the input without its spaces, upper case. That covers a key that does not
-match (`FR54901821074`), a number too short (`GR12345`) and a country outside the EU
+match (`FR28552032534`), a number too short (`GR12345`) and a country outside the EU
 (`NO123456789MVA`, a Norwegian number).
 
 A well-formed number goes to the first VAT register whose `supports()` takes its country. When
@@ -66,7 +66,7 @@ Given your own VAT number as the requester, VIES answers a consultation number -
 the check was made that day, to keep with a reverse-charge invoice:
 
 ```php
-$omnistate = new Omnistate(vat: [new Vies($http)], requester: 'FR53901821074');   // every check
+$omnistate = new Omnistate(vat: [new Vies($http)], requester: 'FR27552032534');   // every check
 
 $check = $omnistate->vat('IE6388047V');                         // or vat($number, requester: '...') for one
 $check->consultationNumber;   // null when VIES gave none
@@ -98,7 +98,7 @@ try {
 }
 ```
 
-On 2026-10-25 France's service answered `MS_MAX_CONCURRENT_REQ` for `FR53901821074` while
+On 2026-10-25 France's service answered `MS_MAX_CONCURRENT_REQ` for a French number while
 `FR39356000000` was answered a few minutes later: a busy answer is passing.
 
 In Symfony, `#[VatNumber(checkExistence: true)]` does the same check in a form, and lets the

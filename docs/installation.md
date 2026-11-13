@@ -49,7 +49,7 @@ $omnistate = new Omnistate(
     internet: new Rdap($http, new Bootstrap($http)),
 );
 
-$company = $omnistate->company('901 821 074');           // or a SIRET, or FR53901821074
+$company = $omnistate->company('552 032 534');           // or a SIRET, or FR27552032534
 echo $company->name, ', ', $company->legalForm, ', ', $company->status->value, ', created on ', $company->createdOn->format('Y-m-d'), "\n";
 echo 'head office ', $company->headOffice->identifier, ', ', $company->headOffice->address, "\n";
 echo 'VAT ', $company->vatNumber, "\n\n";
@@ -69,19 +69,20 @@ try {
 
 ```
 $ php bare.php
-GLITCH ART, SARL, active, created on 2021-07-03
-head office 90182107400019, 5 RUE VINCENT SCOTTO 67400 ILLKIRCH-GRAFFENSTADEN
-VAT FR53901821074
+DANONE, SA, active, created on 1955-01-01
+head office 55203253400703, 59-61 RUE LA FAYETTE 75009 PARIS
+VAT FR27552032534
 
 glitchr.dev: Gandi SAS, registered on 2022-05-19, until 2027-05-19
 ns-1-b.gandi.net ns-210-c.gandi.net ns-238-a.gandi.net
 
-FR53901821074 is valid: SARL GLITCH ART
+FR27552032534 is valid: SA DANONE
 ```
 
-(as answered on 2026-10-05, in an empty directory after the first `composer require` above. Run
-again on 2026-10-25 in the [harness](harness.md), PHP 8.4: the same company and domain lines,
-and France's VIES service refusing calls that day, so the last line read
+(the domain lines as answered on 2026-10-05, in an empty directory after the first `composer require`
+above; the company lines as Recherche d'entreprises answered for DANONE on 2026-11-13; the last line
+as VIES answers a valid number. Run on 2026-10-25 in the [harness](harness.md), PHP 8.4, France's
+VIES service refused calls, so the last line read
 `VIES did not answer (VIES: MS_MAX_CONCURRENT_REQ.): ask again later`.)
 
 No key, no account: the script asks the State's Recherche d'entreprises API, IANA's RDAP
@@ -113,13 +114,13 @@ that takes it, the cache.
 use Omnistate\Vies\Vies;
 use Symfony\Component\HttpClient\HttpClient;
 
-$check = (new Vies(HttpClient::create()))->check('FR53901821074', requester: 'FR...');
+$check = (new Vies(HttpClient::create()))->check('FR27552032534', requester: 'FR...');
 $check->valid;               // true
 $check->consultationNumber;  // the proof you checked it that day
 ```
 
 Called directly, a registry expects its identifier already normalized (`Vies::check()` takes
-`FR53901821074`, not `fr 53 901 821 074`), and some throw an `\InvalidArgumentException` on an
+`FR27552032534`, not `fr 53 552 032 534`), and some throw an `\InvalidArgumentException` on an
 identifier that is not one (`AnnuaireSante::professional('x')`): the facade does both checks
 before asking.
 
@@ -128,10 +129,10 @@ before asking.
 ```php
 use Omnistate\Identifier\{Siren, Siret, VatNumber};
 
-Siren::isValid('901821074');               // Luhn
-Siren::toVatNumber('901821074');           // FR53901821074
+Siren::isValid('552032534');               // Luhn
+Siren::toVatNumber('552032534');           // FR27552032534
 VatNumber::normalize('gr 123456789');      // EL123456789 - each member state's shape
-VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the SIREN
+VatNumber::isWellFormed('FR28552032534');  // false: the key disagrees with the SIREN
 ```
 
 These need `omnisense/omnistate` alone: no source package, no HTTP client. All of them:

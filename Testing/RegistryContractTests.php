@@ -85,19 +85,19 @@ trait RegistryContractTests
     /** A company the recorded answers know, by an identifier it supports. */
     protected function companyIdentifier(): string
     {
-        return '901821074';
+        return '552032534';
     }
 
     /** A VAT number the recorded answers know. */
     protected function vatNumber(): string
     {
-        return 'FR53901821074';
+        return 'FR27552032534';
     }
 
     /** What search() and professionals() are asked; the recorded answers find something. */
     protected function searchQuery(): string
     {
-        return 'glitch';
+        return 'danone';
     }
 
     /** A professional the recorded answers know (an RPPS number). */

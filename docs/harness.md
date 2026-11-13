@@ -47,8 +47,8 @@ PHPUnit suite per package. Composer installs when there is no `vendor/`, and upd
 
 One PHP script, `docker/harness/bin/bare`, that requires the autoloader and nothing else. It
 builds `Omnistate\Omnistate` from the source packages installed - each registry given the HTTP
-client to call with -, says which registries it has, then asks for the company 901821074
-(Recherche d'entreprises), the VAT number FR53901821074 (VIES) and the domain glitchr.dev
+client to call with -, says which registries it has, then asks for the company 552032534
+(Recherche d'entreprises), the VAT number FR27552032534 (VIES) and the domain glitchr.dev
 (IANA's RDAP bootstrap, then the registry's server) and the rent reference index (INSEE's BDM): five
 calls to open services, no key. The
 registries that take a key or are asked about people (annuaire-sante, the civil registers) are
@@ -70,28 +70,28 @@ Omnistate in bare PHP: Omnistate\Omnistate built by hand, no bundle, no containe
                  national-archives-uk covers GB
                  nara covers US
 
-The company 901821074, asked of recherche-entreprises.api.gouv.fr:
-  GLITCH ART, SARL, active, created on 2021-07-03
-  head office 90182107400019 in ILLKIRCH-GRAFFENSTADEN, VAT FR53901821074
+The company 552032534, asked of recherche-entreprises.api.gouv.fr:
+  DANONE, SA, active, created on 1955-01-01
+  head office 55203253400703 in PARIS, VAT FR27552032534
 
 The domain glitchr.dev, asked of https://pubapi.registry.google/rdap/ (found through IANA's bootstrap):
   registrar Gandi SAS, registered on 2022-05-19, expires on 2027-05-19
   name servers ns-1-b.gandi.net, ns-210-c.gandi.net, ns-238-a.gandi.net
 
-The VAT number FR53901821074: the registry did not answer (VIES: MS_MAX_CONCURRENT_REQ.) - that says nothing about it, ask again later.
+The VAT number FR27552032534: the registry did not answer (VIES: MS_MAX_CONCURRENT_REQ.) - that says nothing about it, ask again later.
 
 Loaded from Symfony: Symfony\Component\HttpClient, Symfony\Contracts\HttpClient, Symfony\Contracts\Service
 Classes of a framework (DependencyInjection, Config, HttpKernel, HttpFoundation, Form, Routing, Validator, a bundle, a bridge, Doctrine, Twig): none
 ```
 
-(as answered on 2026-10-05: that day France's VIES service was refusing calls - a registry that
-does not answer is said, never read as "not valid". With `--recorded`, the VAT number reads
-`valid, SARL GLITCH ART, 5 RUE VINCENT SCOTTO, 67400 ILLKIRCH GRAFFENSTADEN`, as answered on
-2026-09-29.)
+(the company as answered on 2026-11-13, the rest on 2026-10-05: that day France's VIES service was
+refusing calls - a registry that does not answer is said, never read as "not valid". With
+`--recorded`, the VAT number reads `valid, SA DANONE, 59 61 RUE LA FAYETTE, 75009 PARIS`: that
+recorded VIES answer is composed from the register's record, the shape VIES answered on 2026-09-29.)
 
 Run again on 2026-10-25 (the same image, against the workspace's installed packages): the same
 lines, France's VIES service again answering `MS_MAX_CONCURRENT_REQ`; with `--recorded`, the VAT
-line `valid, SARL GLITCH ART, 5 RUE VINCENT SCOTTO, 67400 ILLKIRCH GRAFFENSTADEN`. Every package's
+line `valid` with the recorded name and address. Every package's
 tests, the same day: `OK (124 tests, 718 assertions)`.
 
 `Tests/BareTest.php` runs `bare --recorded --json` in a process of its own and checks the list.

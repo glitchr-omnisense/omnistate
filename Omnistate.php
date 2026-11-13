@@ -53,8 +53,8 @@ use Symfony\Contracts\Cache\ItemInterface;
  * an answer kept in the cache is not a call. policies() lists them, with the
  * credit each one asks for.
  *
- *     $omnistate->company('901821074')?->name;            // "GLITCH ART"
- *     $omnistate->vat('FR53901821074')->valid;             // true
+ *     $omnistate->company('552032534')?->name;            // "DANONE"
+ *     $omnistate->vat('FR27552032534')->valid;             // true
  *     $omnistate->domain('glitchr.dev')?->registrar;      // Gandi SAS
  *     $omnistate->professional('10003461033')?->profession; // Médecin (an RPPS number)
  *     $omnistate->facility('670001234')?->name;            // a FINESS number

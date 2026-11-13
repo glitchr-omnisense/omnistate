@@ -33,7 +33,7 @@ final class PolicyTest extends TestCase
         $registry = $this->companies(UsagePolicy::builder('fake')->limit(RateLimit::perMinute(2, 'company'))->build());
         $omnistate = new Omnistate([$registry]);
 
-        $omnistate->company('901821074');
+        $omnistate->company('552032534');
         $omnistate->company('356000000');
         try {
             $omnistate->company('552100554');
@@ -49,7 +49,7 @@ final class PolicyTest extends TestCase
         self::assertCount(2, $registry->asked, 'the third was not asked');
         self::assertSame(0, $omnistate->guard('fake')->remaining('company'));
         self::assertNull($omnistate->guard('fake')->remaining('search'), 'search is not counted');
-        self::assertSame([], $omnistate->search('glitch'), 'search() still answers');
+        self::assertSame([], $omnistate->search('danone'), 'search() still answers');
     }
 
     public function testAnAnswerKeptInTheCacheIsNotACall(): void
@@ -57,8 +57,8 @@ final class PolicyTest extends TestCase
         $registry = $this->companies(UsagePolicy::builder('fake')->limit(RateLimit::perMinute(1, 'company'))->build());
         $omnistate = new Omnistate([$registry], cache: new ArrayAdapter());
 
-        $omnistate->company('901821074');
-        $omnistate->company('901821074');
+        $omnistate->company('552032534');
+        $omnistate->company('552032534');
         self::assertCount(1, $registry->asked);
         self::assertSame(0, $omnistate->guard('fake')->remaining('company'));
     }
@@ -69,14 +69,14 @@ final class PolicyTest extends TestCase
         $omnistate = new Omnistate([$registry]);
 
         try {
-            $omnistate->company('901821074');
+            $omnistate->company('552032534');
             self::fail('A 429 was an answer.');
         } catch (UnavailableException $e) {
             self::assertNotInstanceOf(UsageLimitReachedException::class, $e, 'the register\'s own failure');
             self::assertTrue($e->isTooManyCalls());
         }
         try {
-            $omnistate->search('glitch');
+            $omnistate->search('danone');
             self::fail('The call after a 429 was made.');
         } catch (UsageLimitReachedException $e) {
             self::assertSame(30, $e->retryAfter);
@@ -92,7 +92,7 @@ final class PolicyTest extends TestCase
 
         foreach ([1, 2] as $attempt) {
             try {
-                $omnistate->company('901821074');
+                $omnistate->company('552032534');
             } catch (UnavailableException $e) {
                 self::assertNotInstanceOf(UsageLimitReachedException::class, $e);
             }
@@ -104,10 +104,10 @@ final class PolicyTest extends TestCase
     {
         $limiter = new InMemoryRateLimiter();
         $policy = UsagePolicy::builder('fake')->limit(RateLimit::perDay(1, 'company'))->build();
-        (new Omnistate([$this->companies($policy)], limiter: $limiter))->company('901821074');
+        (new Omnistate([$this->companies($policy)], limiter: $limiter))->company('552032534');
 
         $this->expectException(UsageLimitReachedException::class);
-        (new Omnistate([$this->companies($policy)], limiter: $limiter))->company('901821074');
+        (new Omnistate([$this->companies($policy)], limiter: $limiter))->company('552032534');
     }
 
     public function testASiteTightensARegistersPolicyAndNeverLoosensIt(): void
@@ -120,7 +120,7 @@ final class PolicyTest extends TestCase
         self::assertSame(Permission::Forbidden, $omnistate->policy('fake')->rights->caching->permission);
         self::assertSame(0, $omnistate->guard('fake')->cacheTtl(86400), 'no answer kept: the site said so');
         self::assertSame('Source : Fake', $omnistate->policies()['fake']->rights->attribution->text);
-        $omnistate->company('901821074');
+        $omnistate->company('552032534');
         try {
             $omnistate->company('356000000');
             self::fail('The site\'s limit let a second call through.');
@@ -139,7 +139,7 @@ final class PolicyTest extends TestCase
         $omnistate = new Omnistate([$registry], usage: ['commercial' => true]);
 
         try {
-            $omnistate->company('901821074');
+            $omnistate->company('552032534');
             self::fail('A commercial site asked a non-commercial register.');
         } catch (UsageNotPermitted $e) {
             self::assertSame('fake\'s usage policy does not allow this site: commercial use is forbidden.', $e->getMessage());
@@ -155,7 +155,7 @@ final class PolicyTest extends TestCase
         self::assertNull($omnistate->policy('fake')->rateLimits, 'unknown, not "none"');
         self::assertSame('fake', $omnistate->policy('fake')->provider);
         foreach (range(1, 5) as $call) {
-            $omnistate->company('901821074');
+            $omnistate->company('552032534');
         }
         self::assertCount(5, $registry->asked);
 

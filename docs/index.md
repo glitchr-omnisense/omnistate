@@ -9,7 +9,7 @@ name this person, what does this statistical series say - and gets the same mode
 service's API calls.
 
 ```php
-$omnistate->company('901 821 074');        // a SIREN, a SIRET or a French VAT number: Company
+$omnistate->company('552 032 534');        // a SIREN, a SIRET or a French VAT number: Company
 $omnistate->search('la poste', 5);         // Company[], by name
 $omnistate->vat('IE6388047V');             // VatCheck: valid or not, whose, a consultation number
 $omnistate->domain('example.com');         // Domain: registrar, dates, statuses, name servers

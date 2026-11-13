@@ -8,7 +8,7 @@ both). `omnisense/` is the vendor of every family's core, the providers keep `om
 namespace `Omnistate\` and the GitHub repositories do not change.
 
 ```php
-$omnistate->company('901 821 074');        // or a SIRET, or FR53901821074
+$omnistate->company('552 032 534');        // or a SIRET, or FR27552032534
 $omnistate->vat('DE123456789');            // valid? whose? (+ a consultation number)
 $omnistate->domain('glitchr.dev');         // registrar, dates, name servers
 $omnistate->network('193.0.6.139');        // or 'AS3333': who holds it
@@ -57,7 +57,7 @@ $omnistate = new Omnistate(
     internet: new Rdap($http, new Bootstrap($http)),
 );
 
-echo $omnistate->company('901 821 074')->name, "\n";            // GLITCH ART
+echo $omnistate->company('552 032 534')->name, "\n";            // DANONE
 echo $omnistate->domain('glitchr.dev')->registrar->name, "\n";   // Gandi SAS
 ```
 
@@ -70,11 +70,11 @@ application's, a `MockHttpClient` in a test. The whole script and its answer, an
 ## Identifiers
 
 ```php
-Siren::isValid('901821074');               // Luhn
-Siret::isValid('90182107400019');          // Luhn, La Poste's rule too
-Siren::toVatNumber('901821074');           // FR53901821074
+Siren::isValid('552032534');               // Luhn
+Siret::isValid('55203253400703');          // Luhn, La Poste's rule too
+Siren::toVatNumber('552032534');           // FR27552032534
 VatNumber::normalize('gr 123456789');      // EL123456789 - each member state's shape
-VatNumber::isWellFormed('FR54901821074');  // false: the key disagrees with the SIREN
+VatNumber::isWellFormed('FR28552032534');  // false: the key disagrees with the SIREN
 Rpps::isValid('10000000017');              // Luhn; Rpps::normalize() takes the IDNPS (8 + RPPS) too
 Finess::isValid('580008803');              // Luhn; 2A / 2B for Corsica
 ```
@@ -99,7 +99,7 @@ omnistate:
     cache: cache.app          # null: every call asks the registry
     ttl: 86400
     timeout: 10
-    requester: FR53901821074  # your VAT number: VIES answers a consultation number
+    requester: FR27552032534  # your VAT number: VIES answers a consultation number
 ```
 
 A registry that does not answer throws `UnavailableException` (with `$retryAfter` when it said): that is

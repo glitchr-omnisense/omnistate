@@ -42,7 +42,7 @@ final class SupplierCheckTest extends TestCase
         };
         $omnistate = new Omnistate(companies: [$registry]);
 
-        self::assertFalse($omnistate->company('901821074')->isActive());
+        self::assertFalse($omnistate->company('552032534')->isActive());
     }
 
     /** A real register on a MockHttpClient: its mapping and its errors, offline. */
@@ -144,8 +144,8 @@ final class MatchIdContractTest extends TestCase
 | `registry(HttpClientInterface $http): object` | yes | - | the register under test, built on the suite's client (with a fake key where it needs one) |
 | `recordedAnswers(): array` | yes | - | the service's answers, keyed `"METHOD https://host/path"`, `"METHOD /path"` (the query left out) or `"*"` for any other; each a JSON body as an array (HTTP 200), a `MockResponse`, or a callable `(string $method, string $url, array $options): MockResponse` |
 | `infrastructureAnswers(): array` | no | `[]` | the answers a lookup needs before the record itself (IANA's bootstrap files), kept when the suite answers HTTP 404 to the rest |
-| `companyIdentifier(): string` | no | `901821074` | a company the recorded answers know |
-| `vatNumber(): string` | no | `FR53901821074` | a VAT number they know |
+| `companyIdentifier(): string` | no | `552032534` | a company the recorded answers know |
+| `vatNumber(): string` | no | `FR27552032534` | a VAT number they know |
 | `searchQuery(): string` | no | `glitch` | what `search()` and `professionals()` are asked; the answers find something |
 | `professionalIdentifier(): string` | no | `10003461033` | an RPPS number they know |
 | `facilityIdentifier(): string` | no | `750000010` | a FINESS number they know |

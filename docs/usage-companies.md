@@ -62,7 +62,7 @@ right. Anything else is a `NotSupportedException`, before any request:
 
 ```php
 $omnistate->company('12345');         // NotSupportedException: No company registry installed knows "12345".
-$omnistate->company('901821075');     // the same: a SIREN whose Luhn key is wrong
+$omnistate->company('552032535');     // the same: a SIREN whose Luhn key is wrong
 ```
 
 A company the register does not know is `null`.
@@ -73,8 +73,8 @@ A SIRET gives the company, with the establishment asked for among its establishm
 `establishment()` finds it again by its identifier, whether it is the head office or another:
 
 ```php
-$company = $omnistate->company('901 821 074 00019');
-$establishment = $company->establishment('90182107400019');
+$company = $omnistate->company('552 032 534 00703');
+$establishment = $company->establishment('55203253400703');
 $establishment->headOffice;   // true
 $establishment->address;      // Address: street, postalCode, city, country, full, latitude, longitude
 $establishment->status;       // CompanyStatus::ACTIVE

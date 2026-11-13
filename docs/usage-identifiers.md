@@ -25,15 +25,15 @@ use Omnistate\Identifier\VatNumber;
 
 $show = static fn (string $call, mixed $value) => printf("%-40s %s\n", $call, var_export($value, true));
 
-$show("Siren::normalize('901 821 074')", Siren::normalize('901 821 074'));
-$show("Siren::isValid('901821075')", Siren::isValid('901821075'));
+$show("Siren::normalize('552 032 534')", Siren::normalize('552 032 534'));
+$show("Siren::isValid('552032535')", Siren::isValid('552032535'));
 $show("Siren::toVatNumber('356000000')", Siren::toVatNumber('356000000'));
 $show("Siret::isValid('35600000000048')", Siret::isValid('35600000000048'));
-$show("Siret::siren('901 821 074 00019')", Siret::siren('901 821 074 00019'));
+$show("Siret::siren('552 032 534 00703')", Siret::siren('552 032 534 00703'));
 $show("VatNumber::normalize('gr 123456789')", VatNumber::normalize('gr 123456789'));
-$show("VatNumber::normalize('90182107400019')", VatNumber::normalize('90182107400019'));
+$show("VatNumber::normalize('55203253400703')", VatNumber::normalize('55203253400703'));
 $show("VatNumber::normalize('DE12345')", VatNumber::normalize('DE12345'));
-$show("VatNumber::isWellFormed('FR54901821074')", VatNumber::isWellFormed('FR54901821074'));
+$show("VatNumber::isWellFormed('FR28552032534')", VatNumber::isWellFormed('FR28552032534'));
 $show("VatNumber::country('EL123456789')", VatNumber::country('EL123456789'));
 $show("Rpps::normalize('810003461033')", Rpps::normalize('810003461033'));
 $show("Rpps::toIdnps('10003461033')", Rpps::toIdnps('10003461033'));
@@ -47,15 +47,15 @@ $show("CountryCode::isValid('UK')", CountryCode::isValid('UK'));
 ```
 
 ```
-Siren::normalize('901 821 074')          '901821074'
-Siren::isValid('901821075')              false
+Siren::normalize('552 032 534')          '552032534'
+Siren::isValid('552032535')              false
 Siren::toVatNumber('356000000')          'FR39356000000'
 Siret::isValid('35600000000048')         true
-Siret::siren('901 821 074 00019')        '901821074'
+Siret::siren('552 032 534 00703')        '552032534'
 VatNumber::normalize('gr 123456789')     'EL123456789'
-VatNumber::normalize('90182107400019')   'FR53901821074'
+VatNumber::normalize('55203253400703')   'FR27552032534'
 VatNumber::normalize('DE12345')          NULL
-VatNumber::isWellFormed('FR54901821074') false
+VatNumber::isWellFormed('FR28552032534') false
 VatNumber::country('EL123456789')        'EL'
 Rpps::normalize('810003461033')          '10003461033'
 Rpps::toIdnps('10003461033')             '810003461033'

@@ -46,7 +46,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  *         cache: cache.app          # null: every call asks the registry
  *         ttl: 86400
  *         timeout: 10
- *         requester: FR53901821074  # your VAT number: VIES answers a consultation number
+ *         requester: FR27552032534  # your VAT number: VIES answers a consultation number
  *         annuaire_sante:
  *             api_key: '%env(ESANTE_API_KEY)%'   # omnistate/annuaire-sante: health professionals (RPPS) and facilities (FINESS)
  *

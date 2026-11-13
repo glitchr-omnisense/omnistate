@@ -8,7 +8,7 @@ namespace Omnistate\Identifier;
  */
 final class Siren
 {
-    /** "901 821 074" -> "901821074"; null when it is not nine digits. */
+    /** "552 032 534" -> "552032534"; null when it is not nine digits. */
     public static function normalize(?string $siren): ?string
     {
         $siren = preg_replace('/[\s.\-]/', '', (string) $siren);

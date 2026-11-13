@@ -19,9 +19,9 @@ final class OmnistateTest extends TestCase
         $registry = $this->companies();
         $omnistate = new Omnistate([$registry]);
 
-        self::assertSame('GLITCH ART', $omnistate->company('901 821 074')?->name);
-        self::assertSame('GLITCH ART', $omnistate->company('FR53901821074')?->name, 'a French VAT number, by its SIREN');
-        self::assertSame(['901821074', '901821074'], $registry->asked);
+        self::assertSame('DANONE', $omnistate->company('552 032 534')?->name);
+        self::assertSame('DANONE', $omnistate->company('FR27552032534')?->name, 'a French VAT number, by its SIREN');
+        self::assertSame(['552032534', '552032534'], $registry->asked);
 
         $this->expectException(NotSupportedException::class);
         $omnistate->company('GB12345678');
@@ -31,8 +31,8 @@ final class OmnistateTest extends TestCase
     {
         $registry = $this->companies();
         $omnistate = new Omnistate([$registry], cache: new ArrayAdapter());
-        $omnistate->company('901821074');
-        $omnistate->company('901821074');
+        $omnistate->company('552032534');
+        $omnistate->company('552032534');
 
         self::assertCount(1, $registry->asked, 'asked once');
     }
@@ -40,14 +40,14 @@ final class OmnistateTest extends TestCase
     public function testAVatNumberNoMemberStateWritesThatWayIsNotValidWithoutAskingAnyone(): void
     {
         $vat = $this->vat();
-        $omnistate = new Omnistate(vat: [$vat], requester: 'FR53901821074');
+        $omnistate = new Omnistate(vat: [$vat], requester: 'FR27552032534');
 
         self::assertFalse($omnistate->vat('DE1234')->valid);
-        self::assertFalse($omnistate->vat('FR54901821074')->valid, 'its key disagrees with its SIREN');
+        self::assertFalse($omnistate->vat('FR28552032534')->valid, 'its key disagrees with its SIREN');
         self::assertSame([], $vat->asked);
 
         self::assertTrue($omnistate->vat('de 123 456 789')->valid);
-        self::assertSame([['DE123456789', 'FR53901821074']], $vat->asked, 'normalized, with the requester');
+        self::assertSame([['DE123456789', 'FR27552032534']], $vat->asked, 'normalized, with the requester');
     }
 
     /** @return CompanyRegistryInterface&object{asked: list<string>} */
@@ -71,7 +71,7 @@ final class OmnistateTest extends TestCase
             {
                 $this->asked[] = $identifier;
 
-                return new Company($identifier, 'GLITCH ART', CompanyStatus::ACTIVE, 'FR', 'fake');
+                return new Company($identifier, 'DANONE', CompanyStatus::ACTIVE, 'FR', 'fake');
             }
 
             public function search(string $query, int $limit = 10): array

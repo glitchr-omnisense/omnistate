@@ -50,8 +50,8 @@ final class BareTest extends TestCase
         self::assertSame(0, $status);
         self::assertTrue($report->get('recorded'));
         self::assertSame([], $report->get('unavailable'));
-        self::assertSame(['identifier' => '901821074', 'name' => 'GLITCH ART', 'legal_form' => 'SARL', 'status' => 'active', 'created' => '2021-07-03', 'head_office' => '90182107400019', 'city' => 'ILLKIRCH-GRAFFENSTADEN', 'vat' => 'FR53901821074', 'source' => 'annuaire-entreprises'], $report->get('company'));
-        self::assertSame(['FR53901821074', true, 'SARL GLITCH ART', 'vies'], [$report->get('vat.number'), $report->get('vat.valid'), $report->get('vat.name'), $report->get('vat.source')]);
+        self::assertSame(['identifier' => '552032534', 'name' => 'DANONE', 'legal_form' => 'SA', 'status' => 'active', 'created' => '1955-01-01', 'head_office' => '55203253400703', 'city' => 'PARIS', 'vat' => 'FR27552032534', 'source' => 'annuaire-entreprises'], $report->get('company'));
+        self::assertSame(['FR27552032534', true, 'SA DANONE', 'vies'], [$report->get('vat.number'), $report->get('vat.valid'), $report->get('vat.name'), $report->get('vat.source')]);
         self::assertSame(['glitchr.dev', 'Gandi SAS', '2022-05-19', '2027-05-19'], [$report->get('domain.name'), $report->get('domain.registrar'), $report->get('domain.registered'), $report->get('domain.expires')]);
         self::assertSame('https://pubapi.registry.google/rdap/', $report->get('domain.server'), 'found through IANA\'s bootstrap');
         self::assertContains('Symfony\\Component\\HttpClient\\MockHttpClient', $report->strings('symbols'), 'the answers came through the HTTP client given');

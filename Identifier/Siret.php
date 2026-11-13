@@ -13,7 +13,7 @@ final class Siret
 {
     private const LA_POSTE = '356000000';
 
-    /** "901 821 074 00019" -> "90182107400019"; null when it is not fourteen digits. */
+    /** "552 032 534 00703" -> "55203253400703"; null when it is not fourteen digits. */
     public static function normalize(?string $siret): ?string
     {
         $siret = preg_replace('/[\s.\-]/', '', (string) $siret);

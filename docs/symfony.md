@@ -31,7 +31,7 @@ omnistate:
     cache: cache.app          # null: every call asks the registry
     ttl: 86400
     timeout: 10
-    requester: FR53901821074  # your VAT number: VIES answers a consultation number
+    requester: FR27552032534  # your VAT number: VIES answers a consultation number
     matchid:
         token: ~              # raises matchID's quota
     nara:
@@ -190,8 +190,8 @@ Without the bundle (a validator built by hand) `VatNumberValidator` has no facad
 `checkExistence` checks the shape only. The `{{ value }}` parameter is set on every violation.
 
 `#[VatNumber]` reads the value through `VatNumber::normalize()`, which turns a bare SIREN or SIRET
-into its French VAT number: `901821074` in a VAT number field passes (and is checked with VIES as
-`FR53901821074`). Store the normalized number, not what was typed, when that matters.
+into its French VAT number: `552032534` in a VAT number field passes (and is checked with VIES as
+`FR27552032534`). Store the normalized number, not what was typed, when that matters.
 
 ## Company search
 
